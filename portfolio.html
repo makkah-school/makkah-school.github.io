@@ -48,7 +48,7 @@ input:focus,textarea:focus{border-color:var(--b)}
 .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.78rem;font-weight:700}
 .badge.ok{background:#e3f4ec;color:#2c7a5c}.badge.wait{background:#fdf1dc;color:#9a6a12}.badge.sent{background:#e6f0f7;color:#2f6b93}.badge.demo{background:#fff3cd;color:#8a6d00}
 .prog{height:10px;background:#e7efec;border-radius:10px;overflow:hidden;margin:8px 0}
-.prog i{display:block;height:100%;background:linear-gradient(90deg,var(--g2),var(--g));border-radius:10px;transition:width .4s}
+.prog>i{display:block;height:100%;background:linear-gradient(90deg,var(--g2),var(--g));border-radius:10px;transition:width .4s}
 .circ-item{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:14px;border:1px solid var(--line);border-radius:14px;margin-bottom:10px;cursor:pointer;background:#fff}
 .circ-item:hover{border-color:var(--b)}
 .circ-item b{color:var(--n)}
@@ -169,6 +169,28 @@ body{background:#eef3f2}
 .lb.on{display:flex}.lb img{max-width:100%;max-height:92vh;border-radius:10px}
 .lb button{position:absolute;top:14px;left:14px;width:42px;height:42px;border-radius:50%;border:0;background:#fff;font-size:1.1rem;cursor:pointer}
 .view-badge{display:inline-flex;gap:6px;align-items:center;background:#fff3cd;color:#8a6d00;border-radius:10px;padding:6px 12px;font-weight:700;font-size:.82rem;margin-bottom:12px}
+/* معايير الشواهد */
+.prog{height:auto;overflow:visible;margin:0 0 12px;background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.prog>.bar{flex:1;min-width:160px;height:10px;background:#e6eeec;border-radius:10px;overflow:hidden}.prog .bar i{display:block;height:100%;background:linear-gradient(90deg,#3a9a7e,#3d8fa0);border-radius:10px}
+.prog b{color:var(--n);font-size:1rem}
+.axg{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.ax{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;cursor:pointer;display:flex;gap:12px;align-items:center;text-align:right;font:inherit;color:inherit;transition:.15s}
+.ax:hover{border-color:#3a9a7e;transform:translateY(-2px);box-shadow:0 6px 18px rgba(18,50,71,.08)}
+.ax .no{width:42px;height:42px;border-radius:13px;background:#eef5f3;color:#2c7a64;font-weight:900;display:flex;align-items:center;justify-content:center;font-size:1.05rem;flex:none}
+.ax.done .no{background:linear-gradient(135deg,#3a9a7e,#3d8fa0);color:#fff}
+.ax .tt{flex:1;min-width:0}.ax .tt b{display:block;font-size:.92rem;color:var(--n);line-height:1.5}
+.ax .tt small{font-size:.76rem;color:var(--mut)}.ax.done .tt small{color:#2c7a64;font-weight:700}
+.ax.oth .no{background:#eef1f3;color:#5b6b77}
+.axh{background:linear-gradient(135deg,#123247,#1d5a6e);color:#fff;border-radius:18px;padding:16px;margin-bottom:12px}
+.axh .top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.axh .no{width:48px;height:48px;border-radius:14px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1.2rem;flex:none}
+.axh h3{font-size:1.1rem;font-weight:900;flex:1;min-width:160px}
+.axh .sg{margin-top:12px;font-size:.8rem;opacity:.9}.axh .sg span{display:inline-block;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:3px 10px;margin:3px 0 0 4px;cursor:default}
+.axh .sg span.ok{cursor:pointer}.axh .sg span.ok:hover{background:rgba(255,255,255,.25)}
+.axh .btn.lt{background:#fff;color:var(--n)}
+.imp{background:#f3effa;border:1.5px dashed #6b4c9a;border-radius:16px;padding:14px;margin-top:14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.imp b{color:#4a3470}.imp p{font-size:.82rem;color:#5c5470;margin:2px 0 0;flex-basis:100%}
+.pp h3.axs{font-size:12.5pt;color:#1f3d55;margin:4mm 10mm 2.5mm;border-bottom:.5mm solid #cfdcd6;padding-bottom:1.5mm}
 /* الطباعة */
 .pp{font-family:Tajawal,sans-serif;color:#26313d}
 .pp .cover-pg{page-break-after:always;text-align:center}
@@ -434,6 +456,34 @@ const TYPES = {
   lesson:{l:'درس تطبيقي',i:'📘',k:'wit',c:'#1d5a6e',b:'#e3eff3'},
   wit_other:{l:'شاهد آخر',i:'📎',k:'wit',c:'#5b6b77',b:'#eef1f3'}
 };
+/* نموذج الشواهد الجاهز — معايير تقويم الأداء الوظيفي */
+const AX_TEACHER = [
+  ['أداء الواجبات الوظيفية', ['التقيّد بالدوام الرسمي', 'تأدية الحصص وفق الجدول', 'المناوبة والإشراف', 'التحضير وإعداد الدروس']],
+  ['التفاعل مع المجتمع المهني', ['مجتمعات التعلم المهنية', 'تبادل الزيارات', 'الدروس التطبيقية', 'حضور الدورات وورش العمل']],
+  ['التفاعل مع أولياء الأمور', ['التواصل مع أولياء الأمور', 'تقارير مستوى الطلاب', 'اجتماع أولياء الأمور', 'الخطة الأسبوعية لولي الأمر']],
+  ['التنويع في استراتيجيات التدريس', ['استراتيجيات التعلم النشط', 'التعلم التعاوني', 'صور تطبيق الاستراتيجيات', 'خرائط ذهنية']],
+  ['تحسين نتائج المتعلمين', ['الخطط العلاجية', 'برامج الإثراء', 'تكريم المتفوقين', 'مقارنة النتائج']],
+  ['إعداد وتنفيذ خطة التعلم', ['توزيع المنهج', 'التحضير', 'الخطة الأسبوعية', 'الواجبات والأنشطة']],
+  ['توظيف تقنيات ووسائل التعلم المناسبة', ['منصة مدرستي', 'العروض التقديمية', 'الوسائل التعليمية', 'الاختبارات الإلكترونية']],
+  ['تهيئة البيئة التعليمية', ['مراعاة الفروق الفردية', 'التحفيز والتعزيز', 'قواعد الصف', 'الأنشطة الصفية']],
+  ['الإدارة الصفية', ['ضبط سلوك الطلاب', 'إدارة الوقت', 'سجل المتابعة', 'جذب الانتباه']],
+  ['تحليل نتائج المتعلمين وتشخيص مستوياتهم', ['الاختبار التشخيصي', 'تحليل النتائج', 'تصنيف الطلاب', 'الرسوم البيانية للنتائج']],
+  ['تنوع أساليب التقويم', ['اختبارات ورقية وإلكترونية', 'المشاريع والبحوث', 'ملفات أعمال الطلاب', 'التقويم الذاتي والأقران']]
+];
+const AX_ADMIN = [
+  ['أداء الواجبات الوظيفية', ['الانضباط في الدوام', 'إنجاز المهام المكلّف بها', 'المناوبة والإشراف']],
+  ['التخطيط والتنظيم', ['الخطة الفصلية', 'الجداول والتنظيمات', 'توزيع المهام']],
+  ['المتابعة والتقويم', ['سجلات المتابعة', 'التقارير الدورية', 'استمارات التقويم']],
+  ['التواصل مع المجتمع المدرسي وأولياء الأمور', ['رسائل التواصل', 'الاجتماعات', 'الشراكات المجتمعية']],
+  ['البرامج والمبادرات', ['تقارير البرامج', 'المبادرات النوعية', 'الفعاليات']],
+  ['اللجان والاجتماعات', ['محاضر الاجتماعات', 'قرارات اللجان', 'التكاليف']],
+  ['التطوير المهني', ['الدورات التدريبية', 'ورش العمل', 'الشهادات']],
+  ['توظيف التقنية', ['الأنظمة الإلكترونية (نور، مدرستي)', 'النماذج الرقمية', 'التواصل الإلكتروني']]
+];
+const isTeacherJob = () => !ME.title || /معلم/.test(ME.title);
+const AXES = () => isTeacherJob() ? AX_TEACHER : AX_ADMIN;
+const axOf = x => { const n = +x.ax || 0; return n >= 1 && n <= AXES().length ? n : 0; };
+let AXV = null, FORM_AX = 0;
 const JOBS = ['معلم','معلم أول','معلم ممارس','معلم متقدم','معلم خبير','وكيل الشؤون التعليمية','وكيل شؤون الطلاب','وكيل الشؤون المدرسية','موجه طلابي','رائد نشاط','موجه صحي','أمين مصادر التعلم','محضر مختبر','إداري','مساعد إداري','سكرتير','معلم تربية خاصة','مدير المدرسة'];
 let MODE = 'own', ID = null, STAFF = null, ME = null, PF = null, TAB = 'ach', FILTER = 'all', EDIT = null, PENDING = [];
 
@@ -501,17 +551,18 @@ function render(){
     <div class="tabs" id="tabs">
       <button data-t="ach">🏆 الإنجازات (${c.ach})</button>
       <button data-t="wit">📋 الشواهد (${c.wit})</button>
-      ${own ? '<button data-t="add">➕ إضافة</button><button data-t="me">👤 بياناتي</button>' : ''}
+      ${own ? '<button data-t="add" onclick="FORM_AX=0">➕ إضافة</button><button data-t="me">👤 بياناتي</button>' : ''}
     </div>
     <div id="pane"></div>
     <div class="home-wrap"><a class="home-link" href="index.html">→ العودة للبوابة الرئيسية</a></div>`;
-  $('tabs').querySelectorAll('button').forEach(b => b.onclick = () => { TAB = b.dataset.t; FILTER = 'all'; if (TAB !== 'add'){ EDIT = null; PENDING = []; } renderPane(); });
+  $('tabs').querySelectorAll('button').forEach(b => b.onclick = () => { TAB = b.dataset.t; FILTER = 'all'; AXV = null; if (TAB !== 'add'){ EDIT = null; PENDING = []; FORM_AX = 0; } renderPane(); });
   renderPane();
 }
 function renderPane(){
   $('tabs').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.t === TAB));
   if (TAB === 'add') return renderForm();
   if (TAB === 'me') return renderMe();
+  if (TAB === 'wit') return renderWit();
   const kind = TAB, own = MODE === 'own';
   const types = Object.entries(TYPES).filter(([, t]) => t.k === kind);
   let list = PF.items.filter(x => (TYPES[x.type] || TYPES.ach_other).k === kind);
@@ -523,6 +574,30 @@ function renderPane(){
     <div class="items">${list.length ? list.map(itemHTML).join('') : `<div class="card empty-s"><div>${kind === 'ach' ? '🏆' : '📋'}</div>${kind === 'ach' ? 'لا توجد إنجازات بعد' : 'لا توجد شواهد بعد'}${own ? `<br><button class="btn g sm" style="margin-top:12px" onclick="TAB='add';renderPane()">➕ أضف ${kind === 'ach' ? 'إنجازك' : 'شاهداً'} الأول</button>` : ''}</div>`}</div>`;
   $('pane').querySelectorAll('.chips button').forEach(b => b.onclick = () => { FILTER = b.dataset.f; renderPane(); });
 }
+function renderWit(){
+  const own = MODE === 'own', AX = AXES(), wit = PF.items.filter(x => (TYPES[x.type] || TYPES.ach_other).k === 'wit');
+  const cnt = n => wit.filter(x => axOf(x) === n).length;
+  const sortL = l => l.sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.createdAt || '').localeCompare(a.createdAt || ''));
+  if (AXV === null){
+    const done = AX.filter((_, i) => cnt(i + 1) > 0).length, pct = Math.round(done / AX.length * 100), oth = cnt(0);
+    $('pane').innerHTML = `
+      <div class="prog"><div><b>📋 نموذج الشواهد${isTeacherJob() ? ' — معايير تقويم الأداء الوظيفي' : ''}</b><div class="muted" style="font-size:.8rem">اكتمل ${done} من ${AX.length} ${isTeacherJob() ? 'معياراً' : 'محوراً'}${own ? ' — اضغط على أي بند لإضافة شواهده' : ''}</div></div><div class="bar"><i style="width:${pct}%"></i></div><b>${pct}%</b></div>
+      <div class="axg">${AX.map(([t], i) => { const c = cnt(i + 1); return `<button class="ax ${c ? 'done' : ''}" data-ax="${i + 1}"><div class="no">${i + 1}</div><div class="tt"><b>${E(t)}</b><small>${c ? '✓ ' + c + ' شاهد' : (own ? '＋ أضف شاهداً' : 'لا يوجد')}</small></div></button>`; }).join('')}
+        ${oth || own ? `<button class="ax oth ${oth ? 'done' : ''}" data-ax="0"><div class="no">＋</div><div class="tt"><b>شواهد أخرى / غير مصنّفة</b><small>${oth ? oth + ' شاهد' : (own ? 'أي شاهد لا يندرج تحت البنود' : 'لا يوجد')}</small></div></button>` : ''}
+      </div>`;
+    $('pane').querySelectorAll('[data-ax]').forEach(b => b.onclick = () => { AXV = +b.dataset.ax; renderPane(); window.scrollTo({ top: $('tabs').offsetTop - 10, behavior:'smooth' }); });
+    return;
+  }
+  const n = AXV, it = n ? AX[n - 1] : ['شواهد أخرى / غير مصنّفة', []], list = sortL(wit.filter(x => axOf(x) === n));
+  $('pane').innerHTML = `
+    <div class="axh"><div class="top"><div class="no">${n || '＋'}</div><h3>${E(it[0])}</h3>
+      <button class="btn sm" style="background:rgba(255,255,255,.14)" onclick="AXV=null;renderPane()">→ كل البنود</button>
+      ${own ? `<button class="btn lt sm" onclick="addToAx(${n})">＋ إضافة شاهد</button>` : ''}</div>
+      ${it[1].length ? `<div class="sg">💡 شواهد مقترحة${own ? ' (اضغط لتعبئة العنوان)' : ''}:<br>${it[1].map(g => `<span class="${own ? 'ok' : ''}" ${own ? `onclick="addToAx(${n},this.textContent)"` : ''}>${E(g)}</span>`).join('')}</div>` : ''}
+    </div>
+    <div class="items">${list.length ? list.map(itemHTML).join('') : `<div class="card empty-s"><div>📂</div>لم تُضف شواهد لهذا البند بعد${own ? `<br><button class="btn g sm" style="margin-top:12px" onclick="addToAx(${n})">＋ إضافة شاهد</button>` : ''}</div>`}</div>`;
+}
+function addToAx(n, title){ FORM_AX = n; EDIT = null; PENDING = []; TAB = 'add'; renderPane(); if (title) $('fTitle').value = title; $('fType').value = 'photo_witness'; $('fType').onchange(); window.scrollTo({ top: $('tabs').offsetTop - 10, behavior:'smooth' }); }
 function itemHTML(x){
   const t = TYPES[x.type] || TYPES.ach_other, own = MODE === 'own';
   const imgs = (x.files || []).filter(f => /^image\//.test(f.t)), docs = (x.files || []).filter(f => !/^image\//.test(f.t));
@@ -531,7 +606,7 @@ function itemHTML(x){
     ${own ? `<div class="ac"><button title="تعديل" onclick="editItem('${x.id}')">✏️</button><button title="حذف" onclick="delItem('${x.id}')">🗑️</button></div>` : ''}
     <div class="hd"><div class="ic">${t.i}</div><div style="flex:1;min-width:0;${own ? 'padding-left:78px' : ''}">
       <h3>${E(x.title)}</h3>
-      <div class="mt"><span class="tg">${t.l}</span>${x.date ? `<span>📅 ${hj(x.date)} · ${gd(x.date)}</span>` : ''}${x.org ? `<span>🏛️ ${E(x.org)}</span>` : ''}${x.duration ? `<span>⏱️ ${E(x.duration)}</span>` : ''}</div>
+      <div class="mt"><span class="tg">${t.l}</span>${t.k === 'wit' && AXV === null && axOf(x) ? `<span>📌 ${E(AXES()[axOf(x) - 1][0])}</span>` : ''}${x.date ? `<span>📅 ${hj(x.date)} · ${gd(x.date)}</span>` : ''}${x.org ? `<span>🏛️ ${E(x.org)}</span>` : ''}${x.duration ? `<span>⏱️ ${E(x.duration)}</span>` : ''}</div>
     </div></div>
     ${x.desc ? `<p>${E(x.desc)}</p>` : ''}
     ${skills.length ? `<div class="sk">${skills.map(s => `<span>${E(s)}</span>`).join('')}</div>` : ''}
@@ -550,6 +625,7 @@ function renderForm(){
     <div class="grid">
       <div style="grid-column:1/-1"><label class="f">العنوان *</label><input type="text" id="fTitle" value="${v('title')}" placeholder="مثال: اجتياز دورة استراتيجيات التعلم النشط"></div>
       <div><label class="f">التصنيف</label><select id="fType"><optgroup label="الإنجازات">${opt('ach')}</optgroup><optgroup label="الشواهد والأعمال">${opt('wit')}</optgroup></select></div>
+      <div id="fAxW" style="grid-column:1/-1"><label class="f">${isTeacherJob() ? 'المعيار' : 'المحور'} (من نموذج الشواهد)</label><select id="fAx"><option value="0">شواهد أخرى / غير مصنّفة</option>${AXES().map(([t], i) => `<option value="${i + 1}">${i + 1}. ${E(t)}</option>`).join('')}</select></div>
       <div><label class="f">التاريخ</label><input type="date" id="fDate" value="${v('date')}"><div class="muted" id="fHj" style="margin-top:4px"></div></div>
       <div><label class="f">الجهة المانحة / المنظِّمة</label><input type="text" id="fOrg" value="${v('org')}" placeholder="مثال: إدارة تعليم جدة"></div>
       <div><label class="f">المدة</label><input type="text" id="fDur" value="${v('duration')}" placeholder="مثال: 12 ساعة تدريبية"></div>
@@ -559,8 +635,11 @@ function renderForm(){
         <label class="drop" for="fFiles">📎 اضغط لاختيار الصور أو الملفات</label><input type="file" id="fFiles" multiple accept="image/*,application/pdf" hidden>
         <div class="att-new" id="fAtt"></div></div>
     </div>
-    <div class="toolbar"><button class="btn g" style="flex:1" id="fSave" onclick="saveItem(this)">${x ? '💾 حفظ التعديل' : '➕ إضافة للملف'}</button>${x ? '<button class="btn ghost" onclick="EDIT=null;PENDING=[];TAB=\'ach\';renderPane()">إلغاء</button>' : ''}</div>
+    <div class="toolbar"><button class="btn g" style="flex:1" id="fSave" onclick="saveItem(this)">${x ? '💾 حفظ التعديل' : '➕ إضافة للملف'}</button>${x ? '<button class="btn ghost" onclick="EDIT=null;PENDING=[];TAB=\'ach\';AXV=null;renderPane()">إلغاء</button>' : ''}</div>
   </div>`;
+  $('fAx').value = String(x ? axOf(x) : FORM_AX);
+  $('fType').onchange = () => { $('fAxW').style.display = TYPES[$('fType').value].k === 'wit' ? '' : 'none'; };
+  $('fType').onchange();
   if (x && !PENDING.length) PENDING = (x.files || []).map(f => ({ ...f, saved: true }));
   const upHj = () => $('fHj').textContent = $('fDate').value ? '🌙 ' + hj($('fDate').value) : '';
   $('fDate').oninput = upHj; upHj();
@@ -599,12 +678,13 @@ async function saveItem(btn){
       await Circ.putFile(p, new File([f.blob], f.n, { type:f.t }));
       files.push({ p, n:f.n, t:f.t });
     }
-    const rec = { title, type:$('fType').value, date:$('fDate').value, org:$('fOrg').value.trim(), duration:$('fDur').value.trim(), desc:$('fDesc').value.trim(), skills:$('fSk').value.trim(), files };
+    const isW = TYPES[$('fType').value].k === 'wit';
+    const rec = { ax: isW ? +$('fAx').value : 0, title, type:$('fType').value, date:$('fDate').value, org:$('fOrg').value.trim(), duration:$('fDur').value.trim(), desc:$('fDesc').value.trim(), skills:$('fSk').value.trim(), files };
     if (EDIT){ Object.assign(PF.items.find(i => i.id === EDIT), rec, { editedAt:new Date().toISOString() }); }
     else PF.items.push({ id:Circ.uid(8), ...rec, createdAt:new Date().toISOString() });
     await savePF();
     toast(EDIT ? 'تم حفظ التعديل ✅' : 'تمت الإضافة لملفك ✅');
-    TAB = TYPES[rec.type].k; EDIT = null; PENDING = []; render();
+    TAB = TYPES[rec.type].k; AXV = isW ? rec.ax : null; EDIT = null; PENDING = []; FORM_AX = 0; render();
   } catch(e){ alert('تعذّر الحفظ: ' + e.message); btn.disabled = false; btn.textContent = o; }
 }
 function editItem(id){ EDIT = id; PENDING = []; TAB = 'add'; renderPane(); window.scrollTo({ top: $('tabs').offsetTop - 10, behavior:'smooth' }); }
@@ -635,6 +715,7 @@ function renderMe(){
       <div style="grid-column:1/-1"><label class="f">نبذة مهنية</label><textarea id="mBio">${v('bio')}</textarea></div>
     </div>
     <button class="btn g" style="width:100%;margin-top:14px" onclick="saveMe(this)">💾 حفظ البيانات</button>
+    <div class="imp"><span style="font-size:1.8rem">📥</span><div style="flex:1;min-width:180px"><b>استيراد ملف إنجازي من بوابة مَعَاك</b><p>ينقل بياناتك وإنجازاتك وشواهدك مع مرفقاتها من منصة مَعَاك إلى هنا. لا يحذف شيئاً من هنا ولا من مَعَاك، ولا يكرر ما سبق استيراده.</p></div><button class="btn sm" style="background:#6b4c9a;color:#fff" onclick="importMaak(this)">استيراد الآن</button></div>
   </div>`;
   $('mePhoto').onchange = async e => { const f = e.target.files[0]; if (!f) return; PH = await prepFile(f); $('meAv').innerHTML = `<img src="${PH.preview}">`; };
 }
@@ -652,6 +733,59 @@ async function saveMe(btn){
     }
     toast('تم حفظ بياناتك ✅'); TAB = 'me'; render();
   } catch(e){ alert('تعذّر الحفظ: ' + e.message); btn.disabled = false; btn.textContent = '💾 حفظ البيانات'; }
+}
+
+/* ---------- الاستيراد من مَعَاك ---------- */
+const MAAK = { url:'https://pyrxwqgapwjwhiskowhk.supabase.co', table:'teacher_portfolios', programs:['yaseer', 'dumaj'],
+  key:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB5cnh3cWdhcHdqd2hpc2tvd2hrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE1NDM3MjcsImV4cCI6MjA4NzExOTcyN30.nEJivQNdtbI8Vn7thWe29zHEOzK-Z8eZVQMnSyvKlII' };
+async function maakGet(k){
+  const r = await fetch(`${MAAK.url}/rest/v1/${MAAK.table}?teacher_key=eq.${encodeURIComponent(k)}&select=data`, { headers:{ apikey:MAAK.key, Authorization:'Bearer ' + MAAK.key, Accept:'application/json' } });
+  if (!r.ok) throw new Error('تعذّر الاتصال ببوابة مَعَاك (' + r.status + ')');
+  const rows = await r.json(); return rows && rows[0] ? rows[0].data : null;
+}
+async function maakFile(a, folder){
+  try {
+    const src = a && (a.dataUrl || a.url || a.src || (typeof a === 'string' ? a : '')); if (!src) return null;
+    const blob = await (await fetch(src)).blob(); const t = blob.type || 'application/octet-stream';
+    const ext = /pdf/.test(t) ? 'pdf' : /png/.test(t) ? 'png' : /jpe?g/.test(t) ? 'jpg' : /webp/.test(t) ? 'webp' : ((a.name || '').split('.').pop() || 'bin').toLowerCase();
+    const p = `pf/${ID}/${folder}${Circ.uid(10)}.${ext}`;
+    await Circ.putFile(p, new File([blob], a.name || ('file.' + ext), { type:t }));
+    return { p, n:a.name || ('مرفق.' + ext), t };
+  } catch(e){ console.warn('maak file', e); return null; }
+}
+async function importMaak(btn){
+  const o = btn.textContent; btn.disabled = true; btn.textContent = '⏳ جارٍ البحث...';
+  try {
+    let data = null, prog = '';
+    for (const p of MAAK.programs){ data = await maakGet(p + '_' + encodeURIComponent(ME.name.trim())); if (data){ prog = p; break; } }
+    if (!data) return alert('لم نجد ملف إنجاز باسم «' + ME.name + '» في بوابة مَعَاك.\nتأكد أن الاسم مكتوب بنفس الطريقة في المنصتين.');
+    const ent = Array.isArray(data.entries) ? data.entries : [], wit = Array.isArray(data.witnesses) ? data.witnesses : [];
+    const have = new Set(PF.items.filter(x => x.src).map(x => x.src));
+    const newE = ent.filter(e => !have.has('maak:' + prog + ':e' + e.id)), newW = wit.filter(w => !have.has('maak:' + prog + ':w' + w.id));
+    if (!confirm(`وجدنا ملفك في مَعَاك:\n• ${ent.length} إنجاز\n• ${wit.length} شاهد\n\nسيُنقل الجديد منها (${newE.length + newW.length}) مع المرفقات، وتُكمَّل بياناتك الفارغة. متابعة؟`)) return;
+    const ok = d => /^\d{4}-\d{2}-\d{2}$/.test(d || '') ? d : '';
+    let done = 0; const total = newE.length + newW.length;
+    const step = () => btn.textContent = `⏳ ${++done} / ${total}`;
+    const pr = data.profile || {}, me = PF.profile;
+    ['major', 'degree', 'exp', 'subjects', 'email', 'bio'].forEach(k => { if (!me[k] && pr[k]) me[k] = String(pr[k]); });
+    if (!me.photo && pr.photo){ const f = await maakFile({ dataUrl:pr.photo, name:'photo.jpg' }, 'photo-'); if (f) me.photo = f.p; }
+    const EMAP = { achievement:'achievement', training:'training', activity:'activity', award:'award' };
+    for (const e of newE){
+      const files = []; for (const a of (e.attachments || [])){ const f = await maakFile(a, 'f/'); if (f) files.push(f); }
+      PF.items.push({ id:Circ.uid(8), src:'maak:' + prog + ':e' + e.id, title:e.title || 'إنجاز', type:EMAP[e.type] || 'ach_other', date:ok(e.date), org:e.org || '', duration:e.duration || '', desc:e.desc || '', skills:e.skills || '', files, createdAt:new Date().toISOString() });
+      step();
+    }
+    const WMAP = { school_work:'school_work', photo_witness:'photo_witness', student_product:'student_product' };
+    for (const w of newW){
+      const files = []; for (const a of (w.files || w.attachments || [])){ const f = await maakFile(a, 'f/'); if (f) files.push(f); }
+      PF.items.push({ id:Circ.uid(8), src:'maak:' + prog + ':w' + w.id, ax:0, title:w.title || 'شاهد', type:WMAP[w.type] || 'wit_other', date:ok(w.date), org:'', duration:'', desc:[w.desc, !ok(w.date) && w.dateHijri ? 'التاريخ: ' + w.dateHijri : ''].filter(Boolean).join('\n'), skills:'', files, createdAt:new Date().toISOString() });
+      step();
+    }
+    await savePF();
+    alert(`✅ تم الاستيراد من مَعَاك: ${newE.length} إنجاز و${newW.length} شاهد.` + (newW.length ? '\n\nالشواهد المستوردة في «شواهد أخرى / غير مصنّفة» — افتح كل شاهد بزر ✏️ واختر المعيار المناسب له.' : ''));
+    TAB = 'ach'; AXV = null; render();
+  } catch(e){ alert('تعذّر الاستيراد: ' + e.message); }
+  finally { btn.disabled = false; btn.textContent = o; }
 }
 
 /* ---------- المشاركة ---------- */
@@ -674,13 +808,21 @@ function printPF(){
     return `<h2 class="sec">${title} (${list.length})</h2>` + list.map(x => { const t = TYPES[x.type] || TYPES.ach_other; const ims = (x.files || []).filter(f => /^image\//.test(f.t)).slice(0, 4);
       return `<div class="pit" style="border-right-color:${t.c}"><h4>${t.i} ${E(x.title)}</h4><div class="m">${t.l}${x.date ? ' · ' + hj(x.date) : ''}${x.org ? ' · ' + E(x.org) : ''}${x.duration ? ' · ' + E(x.duration) : ''}</div>${x.desc ? `<p>${E(x.desc)}</p>` : ''}${ims.length ? `<div class="ims">${ims.map(f => `<img src="${E(Circ.fileURL(f.p))}">`).join('')}</div>` : ''}</div>`; }).join('');
   };
+  const card = x => { const t = TYPES[x.type] || TYPES.ach_other; const ims = (x.files || []).filter(f => /^image\//.test(f.t)).slice(0, 4);
+    return `<div class="pit" style="border-right-color:${t.c}"><h4>${t.i} ${E(x.title)}</h4><div class="m">${t.l}${x.date ? ' · ' + hj(x.date) : ''}${x.org ? ' · ' + E(x.org) : ''}</div>${x.desc ? `<p>${E(x.desc)}</p>` : ''}${ims.length ? `<div class="ims">${ims.map(f => `<img src="${E(Circ.fileURL(f.p))}">`).join('')}</div>` : ''}</div>`; };
+  const witPrint = () => {
+    const wit = PF.items.filter(x => (TYPES[x.type] || TYPES.ach_other).k === 'wit'); if (!wit.length) return '';
+    const AX = AXES(); let h = `<h2 class="sec">الشواهد (${wit.length})</h2>`;
+    [...AX.map((a, i) => [i + 1, a[0]]), [0, 'شواهد أخرى']].forEach(([n, t]) => { const l = wit.filter(x => axOf(x) === n); if (l.length) h += `<h3 class="axs">${n ? n + '. ' : ''}${E(t)} (${l.length})</h3>` + l.map(card).join(''); });
+    return h;
+  };
   $('printArea').innerHTML = `<div class="pp">
     <div class="cover-pg">${head}<div class="big">ملف الإنجاز</div>
       ${p.photo ? `<img class="ph" src="${E(Circ.fileURL(p.photo))}">` : `<div class="phx">${E(ME.name.trim()[0])}</div>`}
       <div class="nm">أ. ${E(ME.name)}</div><div class="jt2">${E(ME.title || 'معلم')}</div>
       <table class="pt">${rows.map(r => `<tr><td>${r[0]}</td><td>${E(r[1])}</td></tr>`).join('')}</table>
       <div class="yr">العام الدراسي ${yr}</div></div>
-    <div class="wrap0">${head}${sec('ach', 'الإنجازات')}${sec('wit', 'الشواهد والأعمال')}</div></div>`;
+    <div class="wrap0">${head}${sec('ach', 'الإنجازات')}${witPrint()}</div></div>`;
   const imgs = [...$('printArea').querySelectorAll('img')];
   Promise.all(imgs.map(i => i.complete ? 1 : new Promise(r => { i.onload = i.onerror = r; }))).then(() => { const t = document.title; document.title = 'ملف إنجاز - ' + ME.name; window.print(); document.title = t; });
 }

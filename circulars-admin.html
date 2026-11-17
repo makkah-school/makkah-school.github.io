@@ -48,7 +48,7 @@ input:focus,textarea:focus{border-color:var(--b)}
 .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.78rem;font-weight:700}
 .badge.ok{background:#e3f4ec;color:#2c7a5c}.badge.wait{background:#fdf1dc;color:#9a6a12}.badge.sent{background:#e6f0f7;color:#2f6b93}.badge.demo{background:#fff3cd;color:#8a6d00}
 .prog{height:10px;background:#e7efec;border-radius:10px;overflow:hidden;margin:8px 0}
-.prog i{display:block;height:100%;background:linear-gradient(90deg,var(--g2),var(--g));border-radius:10px;transition:width .4s}
+.prog>i{display:block;height:100%;background:linear-gradient(90deg,var(--g2),var(--g));border-radius:10px;transition:width .4s}
 .circ-item{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:14px;border:1px solid var(--line);border-radius:14px;margin-bottom:10px;cursor:pointer;background:#fff}
 .circ-item:hover{border-color:var(--b)}
 .circ-item b{color:var(--n)}
@@ -232,6 +232,7 @@ textarea{min-height:120px;resize:vertical}
       </div>
       <div class="card">
         <h2><span class="dot"></span>قائمة المنسوبين <span class="muted" id="staffCount"></span></h2>
+        <div style="position:relative;margin-bottom:12px"><input id="stQ" type="search" placeholder="🔍 ابحث بالاسم أو الجوال أو اسم المستخدم أو المسمى..." oninput="filterStaff()" style="padding-inline-start:14px"><span id="stQn" class="muted" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:.85rem"></span></div>
         <div id="staffRows"></div>
         <div class="toolbar">
           <button class="btn ghost" onclick="addStaff()">➕ إضافة منسوب</button>
@@ -732,8 +733,18 @@ function renderStaff(){
         <button class="btn sm" onclick="issuePw(${i})">🔑 ${t.pw ? 'إعادة تعيين' : 'إصدار'}</button>
         <button class="btn red sm" onclick="delStaff(${i})">✕</button></div></div>`).join('');
   $('staffRows').querySelectorAll('input').forEach(inp => inp.oninput = () => { S.staff[inp.dataset.i][inp.dataset.k] = inp.value.trim(); });
+  filterStaff();
 }
-function addStaff(){ S.staff.push({ id: Circ.uid(6), name: '', phone: '', token: Circ.uid(12) }); Circ.ensureUsers(S.staff); renderStaff(); }
+const normAr = v => String(v || '').toLowerCase().replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/[ًٌٍَُِّْـ]/g, '').replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/\s+/g, ' ').trim();
+function filterStaff(){
+  const q = normAr($('stQ') && $('stQ').value); let n = 0;
+  $('staffRows').querySelectorAll('.row-t').forEach((row, i) => {
+    const t = S.staff[i] || {}; const hay = normAr([t.name, t.phone, t.user, t.title].join(' '));
+    const ok = !q || q.split(' ').every(w => hay.includes(w)); row.style.display = ok ? '' : 'none'; if (ok) n++;
+  });
+  $('stQn').textContent = q ? n + ' نتيجة' : '';
+}
+function addStaff(){ S.staff.push({ id: Circ.uid(6), name: '', phone: '', token: Circ.uid(12) }); Circ.ensureUsers(S.staff); $('stQ').value = ''; renderStaff(); const r = $('staffRows').lastElementChild; if (r){ r.scrollIntoView({ block:'center' }); r.querySelector('input').focus(); } }
 let CRED = null;
 async function issuePw(i){
   const t = S.staff[i]; if (!t.name) return toast('اكتب اسم المنسوب أولاً');
