@@ -306,9 +306,10 @@ const Circ = (() => {
 
   /* ---------- الجلسات ---------- */
   const SESS = 'mk_school_session';
-  function session(){ try { const s = JSON.parse(localStorage.getItem(SESS) || 'null'); if (s && s.exp > Date.now()) return s; } catch(e){} return null; }
-  function setSession(s){ try { localStorage.setItem(SESS, JSON.stringify(s)); } catch(e){} }
-  function logout(){ try { localStorage.removeItem(SESS); } catch(e){} }
+  function readS(role){ try { const s = JSON.parse(localStorage.getItem(SESS + ':' + role) || 'null'); if (s && s.exp > Date.now()) return s; } catch(e){} return null; }
+  function session(role){ return role ? readS(role) : (readS('teacher') || readS('admin')); }
+  function setSession(s){ try { localStorage.setItem(SESS + ':' + s.role, JSON.stringify(s)); } catch(e){} }
+  function logout(role){ try { (role ? [role] : ['teacher', 'admin']).forEach(r => localStorage.removeItem(SESS + ':' + r)); } catch(e){} }
   async function saveStaff(list){
     await putJSON('staff.json', list);
     await Promise.all(list.map(t => putJSON(`keys/${t.token}.json`, { id: t.id, name: t.name })));
@@ -508,7 +509,7 @@ function doPrint(){
     window.print(); document.title = old;
   });
 }
-(function(){ const s = Circ.session(); if (s && s.role === 'teacher' && S.sigs[0] && !S.sigs[0].n){ S.sigs[0].n = 'أ. ' + s.name; } })();
+(function(){ const s = Circ.session('teacher'); if (s && S.sigs[0] && !S.sigs[0].n){ S.sigs[0].n = 'أ. ' + s.name; } })();
 renderForm();
 </script>
 </body>

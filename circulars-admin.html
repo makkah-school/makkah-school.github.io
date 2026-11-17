@@ -409,9 +409,10 @@ const Circ = (() => {
 
   /* ---------- الجلسات ---------- */
   const SESS = 'mk_school_session';
-  function session(){ try { const s = JSON.parse(localStorage.getItem(SESS) || 'null'); if (s && s.exp > Date.now()) return s; } catch(e){} return null; }
-  function setSession(s){ try { localStorage.setItem(SESS, JSON.stringify(s)); } catch(e){} }
-  function logout(){ try { localStorage.removeItem(SESS); } catch(e){} }
+  function readS(role){ try { const s = JSON.parse(localStorage.getItem(SESS + ':' + role) || 'null'); if (s && s.exp > Date.now()) return s; } catch(e){} return null; }
+  function session(role){ return role ? readS(role) : (readS('teacher') || readS('admin')); }
+  function setSession(s){ try { localStorage.setItem(SESS + ':' + s.role, JSON.stringify(s)); } catch(e){} }
+  function logout(role){ try { (role ? [role] : ['teacher', 'admin']).forEach(r => localStorage.removeItem(SESS + ':' + r)); } catch(e){} }
   async function saveStaff(list){
     await putJSON('staff.json', list);
     await Promise.all(list.map(t => putJSON(`keys/${t.token}.json`, { id: t.id, name: t.name })));
@@ -488,8 +489,8 @@ async function start(){
   const c = new URLSearchParams(location.search).get('c'); if (c) openView(c);
 }
 if (Circ.DEMO) $('demoNote').classList.remove('hide');
-{ const ss = Circ.session(); if (sessionStorage.getItem('circ_ok') && ss && ss.role === 'admin') start(); else sessionStorage.removeItem('circ_ok'); }
-function adminLogout(){ sessionStorage.removeItem('circ_ok'); Circ.logout(); location.href = location.pathname; }
+{ if (sessionStorage.getItem('circ_ok') && Circ.session('admin')) start(); else sessionStorage.removeItem('circ_ok'); }
+function adminLogout(){ sessionStorage.removeItem('circ_ok'); Circ.logout('admin'); location.href = location.pathname; }
 
 /* ---------- التبويبات ---------- */
 document.querySelectorAll('.tabs button[data-t]').forEach(b => b.onclick = () => {
@@ -655,8 +656,8 @@ function printSheet(){
     <div class="p-title">كشف الاطلاع على تعميم: ${Circ.esc(S.cur.title)}</div>
     <div class="p-meta"><span><b>رقم التعميم:</b> ${Circ.esc(S.cur.number || '—')}</span><span><b>التاريخ:</b> ${Circ.esc(S.cur.date)}</span><span><b>طريقة التوقيع:</b> إلكتروني</span></div>
     <div class="p-ack">أقرّ باطلاعي على التعميم والتزامي بالعمل بمضمونه.</div>
-    <table class="p-table"><thead><tr><th style="width:9mm">م</th><th>اسم المنسوب</th><th style="width:44mm">التوقيع</th><th style="width:34mm">تاريخ الاطلاع</th></tr></thead><tbody>
-    ${S.staff.map((t, i) => { const s = S.sigs[t.id]; return `<tr><td>${i + 1}</td><td class="nm">${Circ.esc(t.name)}</td><td>${s ? `<img src="${s.signature}">` : ''}</td><td>${s ? Circ.esc(s.hijri) + '<br><small>' + Circ.esc(s.time) + '</small>' : ''}</td></tr>`; }).join('')}
+    <table class="p-table"><thead><tr><th style="width:9mm">م</th><th>اسم المنسوب</th><th style="width:44mm">التوقيع</th><th style="width:24mm">الحالة</th><th style="width:42mm">ملاحظات</th></tr></thead><tbody>
+    ${S.staff.map((t, i) => { const s = S.sigs[t.id]; return `<tr><td>${i + 1}</td><td class="nm">${Circ.esc(t.name)}</td><td>${s ? `<img src="${s.signature}">` : ''}</td><td style="font-size:9.5pt;font-weight:800;white-space:nowrap;color:${s ? '#2c7a5c' : '#b0413e'}">${s ? '✓ تم الاطلاع' : 'لم يوقّع'}</td><td></td></tr>`; }).join('')}
     </tbody></table>
     <div class="p-sum"><div class="s"><b>عدد الموقّعين</b>${k} من ${n}</div><div class="s"><b>مدير المدرسة</b>${Circ.esc(S.settings.principalName)}<br>التوقيع: ....................</div></div>`;
   const imgs = [...$('printArea').querySelectorAll('img')];

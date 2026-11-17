@@ -354,9 +354,10 @@ const Circ = (() => {
 
   /* ---------- الجلسات ---------- */
   const SESS = 'mk_school_session';
-  function session(){ try { const s = JSON.parse(localStorage.getItem(SESS) || 'null'); if (s && s.exp > Date.now()) return s; } catch(e){} return null; }
-  function setSession(s){ try { localStorage.setItem(SESS, JSON.stringify(s)); } catch(e){} }
-  function logout(){ try { localStorage.removeItem(SESS); } catch(e){} }
+  function readS(role){ try { const s = JSON.parse(localStorage.getItem(SESS + ':' + role) || 'null'); if (s && s.exp > Date.now()) return s; } catch(e){} return null; }
+  function session(role){ return role ? readS(role) : (readS('teacher') || readS('admin')); }
+  function setSession(s){ try { localStorage.setItem(SESS + ':' + s.role, JSON.stringify(s)); } catch(e){} }
+  function logout(role){ try { (role ? [role] : ['teacher', 'admin']).forEach(r => localStorage.removeItem(SESS + ':' + r)); } catch(e){} }
   async function saveStaff(list){
     await putJSON('staff.json', list);
     await Promise.all(list.map(t => putJSON(`keys/${t.token}.json`, { id: t.id, name: t.name })));
@@ -429,10 +430,10 @@ $('loginForm').onsubmit = async e => {
 
 /* ---------- لوحة المعلم ---------- */
 async function start(){
-  const s = Circ.session(); if (!s || s.role !== 'teacher') return;
+  const s = Circ.session('teacher'); if (!s) return;
   const list = await Circ.staff();
   ME = list.find(t => t.id === s.id);
-  if (!ME || !ME.pw){ Circ.logout(); return; }
+  if (!ME || !ME.pw){ Circ.logout('teacher'); return; }
   $('vLogin').classList.add('hide'); $('vApp').classList.remove('hide');
   $('tName').textContent = 'أ. ' + ME.name; $('av').textContent = ME.name.trim()[0];
   $('tUser').textContent = 'اسم المستخدم: ' + ME.user;
@@ -448,7 +449,7 @@ async function start(){
   $('done').innerHTML = done.length ? done.map(({ c, s }) => `<div class="c-row"><div class="ic d">✅</div><div class="t"><b>${Circ.esc(c.title)}</b><small>وقّعت في ${Circ.esc(s.hijri)} · ${Circ.esc(s.time)}</small></div><a class="btn ghost sm" href="${link(c, 1)}">الإقرار</a></div>`).join('')
     : '<p class="muted">لا يوجد</p>';
 }
-function doLogout(){ Circ.logout(); location.reload(); }
+function doLogout(){ Circ.logout('teacher'); location.reload(); }
 
 /* ---------- تغيير كلمة المرور ---------- */
 function openPw(){ ['p0','p1','p2'].forEach(i => $(i).value = ''); err('pErr', ''); $('pwModal').classList.add('on'); }
@@ -470,7 +471,7 @@ $('pwForm').onsubmit = async e => {
   finally { b.disabled = false; }
 };
 
-if (Circ.session() && Circ.session().role === 'teacher'){ if (next) location.href = next; else start(); }
+if (Circ.session('teacher')){ if (next) location.href = next; else start(); }
 </script>
 </body>
 </html>
