@@ -12,6 +12,10 @@
 html,body{background:var(--bg);color:var(--txt);font-family:Tajawal,system-ui,sans-serif;direction:rtl}
 button,input,textarea,select{font-family:inherit;font-size:1rem}
 .hdr{background:linear-gradient(100deg,#5bb58a,#3f9a8f 40%,#2f7fa0 75%,#3a6f9c);color:#fff;padding:18px 16px 34px;border-radius:0 0 22px 22px;position:relative}
+.home-link{display:inline-flex;align-items:center;gap:6px;color:#3d8fa0;font-weight:800;text-decoration:none;font-size:.95rem}
+.home-link:hover{text-decoration:underline}
+.home-link.light{color:#fff;opacity:.9}
+.home-wrap{text-align:center;margin:22px 0 6px}
 .hdr .back{display:block;max-width:980px;margin:-6px auto 8px;color:#fff;font-weight:700;text-decoration:none;opacity:.85;font-size:.85rem;text-align:left}
 .hdr .row{display:flex;align-items:center;gap:12px;justify-content:center;max-width:980px;margin:auto}
 .hdr img{height:44px}.hdr .sep{width:2px;height:40px;background:rgba(255,255,255,.85)}
@@ -141,7 +145,7 @@ table.sh tr{page-break-inside:avoid}
 </style>
 </head>
 <body>
-<div class="bar"><b>📋 كشف الاطلاع</b><span class="muted" style="color:#cfe0e8" id="cnt"></span><button class="btn g sm" onclick="window.print()">⬇️ حفظ PDF / طباعة</button><button class="btn ghost sm" onclick="load()">🔄 تحديث</button></div>
+<div class="bar"><a class="home-link light" href="index.html" style="font-size:.85rem">→ العودة للبوابة الرئيسية</a><b>📋 كشف الاطلاع</b><span class="muted" style="color:#cfe0e8" id="cnt"></span><button class="btn g sm" onclick="window.print()">⬇️ حفظ PDF / طباعة</button><button class="btn ghost sm" onclick="load()">🔄 تحديث</button></div>
 <div class="paper" id="paper"><div class="state">⏳ جارٍ تحميل الكشف...</div></div>
 
 <script>

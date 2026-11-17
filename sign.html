@@ -11,6 +11,10 @@
 html,body{background:var(--bg);color:var(--txt);font-family:Tajawal,system-ui,sans-serif;direction:rtl}
 button,input,textarea,select{font-family:inherit;font-size:1rem}
 .hdr{background:linear-gradient(100deg,#5bb58a,#3f9a8f 40%,#2f7fa0 75%,#3a6f9c);color:#fff;padding:18px 16px 34px;border-radius:0 0 22px 22px;position:relative}
+.home-link{display:inline-flex;align-items:center;gap:6px;color:#3d8fa0;font-weight:800;text-decoration:none;font-size:.95rem}
+.home-link:hover{text-decoration:underline}
+.home-link.light{color:#fff;opacity:.9}
+.home-wrap{text-align:center;margin:22px 0 6px}
 .hdr .back{display:block;max-width:980px;margin:-6px auto 8px;color:#fff;font-weight:700;text-decoration:none;opacity:.85;font-size:.85rem;text-align:left}
 .hdr .row{display:flex;align-items:center;gap:12px;justify-content:center;max-width:980px;margin:auto}
 .hdr img{height:44px}.hdr .sep{width:2px;height:40px;background:rgba(255,255,255,.85)}
@@ -171,6 +175,7 @@ textarea{min-height:120px;resize:vertical}
   </section>
 </main>
 
+<div class="home-wrap" style="margin-bottom:30px"><a class="home-link" href="index.html">→ العودة للبوابة الرئيسية</a></div>
 <div id="printArea"></div>
 <div class="toast" id="toast"></div>
 
