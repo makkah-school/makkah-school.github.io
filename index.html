@@ -173,7 +173,8 @@ footer .copy{width:100%;border-top:1px solid rgba(255,255,255,.08);padding-top:1
       <a href="#services">الخدمات</a>
       <a href="#news">الإعلانات</a>
       <a href="#about">عن المدرسة</a>
-      <a class="cta" href="circulars-admin.html">دخول الإدارة</a>
+      <a href="circulars-admin.html">الإدارة</a>
+      <a class="cta" href="teacher.html">بوابة المعلم</a>
     </nav>
   </div>
 </header>
@@ -185,7 +186,8 @@ footer .copy{width:100%;border-top:1px solid rgba(255,255,255,.08);padding-top:1
     <h1>متوسطة <span>مكة المكرمة</span></h1>
     <p class="lead">بوابة المدرسة الإلكترونية — كل ما يحتاجه المعلم والإدارة وولي الأمر في مكان واحد: التعاميم والتوقيع الإلكتروني، التقارير والشواهد، الإعلانات، وبرامج ذوي الإعاقة.</p>
     <div class="hero-btns">
-      <a class="btn light" href="#services">استعرض الخدمات</a>
+      <a class="btn light" href="teacher.html">🔐 دخول المعلم</a>
+      <a class="btn glass" href="#services">استعرض الخدمات</a>
       <a class="btn glass" href="https://makkah-special.github.io/" target="_blank" rel="noopener">منصة مَعَاك ↗</a>
     </div>
     <div class="today">
@@ -214,6 +216,11 @@ footer .copy{width:100%;border-top:1px solid rgba(255,255,255,.08);padding-top:1
         </div>
         <span class="go">دخول الإدارة</span>
       </a>
+      <a class="tile wide rv" href="teacher.html" style="background:linear-gradient(150deg,#e9f6f1,#fff)">
+        <div><div class="ic" style="background:#d4efe4">👨‍🏫</div><h3>بوابة المعلم</h3>
+        <p>دخول باسم مستخدم وكلمة مرور خاصة بكل معلم: تعاميمك المطلوب توقيعها، إقراراتك، وخدماتك في مكان واحد.</p></div>
+        <span class="go">تسجيل الدخول</span>
+      </a>
       <a class="tile wide gold rv" href="reports.html">
         <div><div class="ic">🗂️</div><h3>مولّد التقارير والشواهد</h3>
         <p>اكتب بيانات الدرس أو الفعالية وارفع صورك، ويجهز لك تقرير PDF بالهوية الرسمية خلال دقيقة.</p></div>
@@ -223,7 +230,11 @@ footer .copy{width:100%;border-top:1px solid rgba(255,255,255,.08);padding-top:1
         <div><div class="ic">🤝</div><h3>منصة مَعَاك</h3><p>قسم ذوي الإعاقة: الدمج الفكري ويسير التعليمي.</p></div>
         <span class="go">زيارة المنصة</span>
       </a>
-      <a class="tile rv" href="#news">
+      <a class="tile rv" href="evidence.html" style="background:linear-gradient(150deg,#0d5a44,#13805f);color:#fff;border:0">
+        <div><div class="ic" style="background:rgba(255,255,255,.15)">📁</div><h3>ملف الشواهد</h3><p style="color:rgba(255,255,255,.82)">شواهد الأداء المدرسي بمحاورها — الدخول بإذن المدير.</p></div>
+        <span class="go" style="color:#fff">دخول برمز</span>
+      </a>
+      <a class="tile wide rv" href="#news">
         <div><div class="ic">📢</div><h3>الإعلانات والفعاليات</h3><p>آخر أخبار المدرسة ومواعيدها القادمة.</p></div>
         <span class="go">تصفّح</span>
       </a>
@@ -265,7 +276,9 @@ footer .copy{width:100%;border-top:1px solid rgba(255,255,255,.08);padding-top:1
     </div>
     <div class="links">
       <a href="circulars-admin.html">🔐 لوحة الإدارة</a>
-      <a href="reports.html">🗂️ التقارير والشواهد</a>
+      <a href="teacher.html">👨‍🏫 بوابة المعلم</a>
+      <a href="reports.html">🗂️ مولّد التقارير</a>
+      <a href="evidence.html">📁 ملف الشواهد</a>
       <a href="https://makkah-special.github.io/" target="_blank" rel="noopener">🤝 منصة مَعَاك</a>
     </div>
     <div class="copy">© <span id="yr"></span> متوسطة مكة المكرمة — إعداد وتطوير أ. سعد سالم الزهراني</div>
@@ -287,7 +300,9 @@ const CIRC_CONFIG = {
   DEFAULT_PIN: '1448',         // رمز الدخول الأول للوحة الإدارة (غيّره من الإعدادات بعد أول دخول)
   SCHOOL: 'متوسطة مكة المكرمة',
   PRINCIPAL_NAME: 'إبراهيم علي آل صمع',
-  PRINCIPAL_PHONE: ''          // جوال المدير، ويمكن تعديله من الإعدادات
+  PRINCIPAL_PHONE: '',         // جوال المدير، ويمكن تعديله من الإعدادات
+  // كلمة مرور المدير في ملف الشواهد (مشفّرة) — تفتح لوحة الإدارة أيضاً
+  EVIDENCE_ADMIN_HASH: '398dc46ba4b05fb9b99d80c49af7cc065c504fb08ca21d0862797beadab2b9b4'
 };
 
 /* ---------- قائمة المنسوبين الافتراضية (من كشف الاطلاع) ---------- */
@@ -373,10 +388,39 @@ const Circ = (() => {
     if (s && !Array.isArray(s)) throw new Error('ملف المنسوبين تالف');
     if (!s){
       s = CIRC_DEFAULT_STAFF.map((name) => ({ id: uid(6), name, phone: '', token: uid(12) }));
+      ensureUsers(s);
       await saveStaff(s);
-    }
+    } else if (ensureUsers(s)) await putJSON('staff.json', s);
     return s;
   }
+  // اسم مستخدم رقمي (4 أرقام) لكل منسوب
+  function ensureUsers(list){
+    let changed = false, next = 1001;
+    const used = new Set(list.map(t => t.user).filter(Boolean));
+    list.forEach(t => { if (!t.user){ while (used.has(String(next))) next++; t.user = String(next); used.add(t.user); changed = true; } });
+    return changed;
+  }
+
+  /* ---------- كلمات المرور (PBKDF2) ---------- */
+  async function pwHash(pw, salt){
+    const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveBits']);
+    const bits = await crypto.subtle.deriveBits({ name:'PBKDF2', salt: new TextEncoder().encode(salt), iterations: 150000, hash:'SHA-256' }, key, 256);
+    return Array.from(new Uint8Array(bits), x => x.toString(16).padStart(2, '0')).join('');
+  }
+  async function makePw(pw){ const salt = uid(16); return { salt, hash: await pwHash(pw, salt), at: new Date().toISOString() }; }
+  async function checkPw(rec, pw){ return !!(rec && rec.salt && (await pwHash(pw, rec.salt)) === rec.hash); }
+  const randPw = () => { const a = new Uint32Array(1); crypto.getRandomValues(a); return String(100000 + a[0] % 900000); };
+  function findStaff(list, login){
+    const v = String(login || '').trim().replace(/[٠-٩]/g, c => '٠١٢٣٤٥٦٧٨٩'.indexOf(c));
+    const p = phone(v);
+    return list.find(t => t.user === v) || (p.length >= 9 ? list.find(t => t.phone && phone(t.phone) === p) : null);
+  }
+
+  /* ---------- الجلسات ---------- */
+  const SESS = 'mk_school_session';
+  function session(){ try { const s = JSON.parse(localStorage.getItem(SESS) || 'null'); if (s && s.exp > Date.now()) return s; } catch(e){} return null; }
+  function setSession(s){ try { localStorage.setItem(SESS, JSON.stringify(s)); } catch(e){} }
+  function logout(){ try { localStorage.removeItem(SESS); } catch(e){} }
   async function saveStaff(list){
     await putJSON('staff.json', list);
     await Promise.all(list.map(t => putJSON(`keys/${t.token}.json`, { id: t.id, name: t.name })));
@@ -388,12 +432,12 @@ const Circ = (() => {
     const out = [];
     for (let i = 0; i < ids.length; i += 12){
       const part = await Promise.all(ids.slice(i, i + 12).map(id => getJSON(`c/${cid}/sig/${id}.json`).catch(() => null)));
-      part.forEach(r => r && out.push(r));
+      part.forEach(r => r && !r.revoked && out.push(r));
     }
     return out;
   }
 
-  return { DEMO, C, getJSON, putJSON, putFile, getFileBlob, list, uid, sha, hijri, timeStr, esc, phone, wa, pageURL, settings, staff, saveStaff, circulars, signatures };
+  return { DEMO, C, pwHash, makePw, checkPw, randPw, findStaff, session, setSession, logout, ensureUsers, getJSON, putJSON, putFile, getFileBlob, list, uid, sha, hijri, timeStr, esc, phone, wa, pageURL, settings, staff, saveStaff, circulars, signatures };
 })();
 
 /* ---------- عرض ملف PDF (يعتمد pdf.js إن توفر) ---------- */

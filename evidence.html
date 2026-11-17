@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<!-- تصميم وتطوير: أ. سعد الزهراني – متوسطة مكة المكرمة بجدة © 2026. جميع الحقوق محفوظة. -->
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d5a44">
+<meta name="author" content="أ. سعد الزهراني">
+<meta name="designer" content="أ. سعد الزهراني">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="files/favicon.png">
+<link rel="apple-touch-icon" href="files/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="متوسطة مكة">
+<meta name="application-name" content="متوسطة مكة">
+<title>ملف الشواهد | متوسطة مكة المكرمة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Reem+Kufi:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#13221c; --muted:#5f6d66; --line:#e4e1d7; --paper:#f6f4ee; --card:#fff;
+  --green:#0d5a44; --green-2:#13805f; --green-soft:#e7f2ed; --gold:#b48a33; --gold-soft:#f7efdc;
+  --red:#b4442f; --r:18px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:"IBM Plex Sans Arabic",system-ui,sans-serif;color:var(--ink);background:var(--paper);line-height:1.6;min-height:100vh}
+a{color:inherit}
+button{font:inherit}
+.pattern{position:absolute;inset:0;opacity:.08;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72' viewBox='0 0 72 72'%3E%3Cg fill='none' stroke='%23fff' stroke-width='1.1'%3E%3Cpath d='M36 6l9 21 21 9-21 9-9 21-9-21-21-9 21-9z'/%3E%3Cpath d='M36 22l4 10 10 4-10 4-4 10-4-10-10-4 10-4z'/%3E%3C/g%3E%3C/svg%3E");}
+
+/* ===== header ===== */
+header{background:linear-gradient(160deg,#0d5a44 0%,#0a4a38 100%);color:#fff;position:relative;overflow:hidden}
+.hd{position:relative;max-width:1160px;margin:0 auto;padding:22px 22px}
+.top{display:flex;align-items:center;gap:14px}
+.logo{width:52px;height:52px;border-radius:14px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);display:grid;place-items:center;flex:none}
+.top .t1{font-size:12.5px;color:#cde4da;margin:0}
+.top .t2{font-family:"Reem Kufi";font-weight:700;font-size:21px;margin:0;line-height:1.3}
+.top .home-link{margin-inline-start:auto;text-decoration:none;font-size:14px;color:#e3f0ea;border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:8px 16px;display:none;align-items:center;gap:6px;white-space:nowrap;background:rgba(255,255,255,.1);font-weight:600}
+.top .home-link:hover{background:rgba(255,255,255,.12)}
+body.in-sec .top .home-link{display:flex}
+.hero{padding:30px 0 40px;display:grid;grid-template-columns:1fr 340px;gap:48px;align-items:center}
+.hero-txt{text-align:center}
+.poster{margin:0;position:relative;justify-self:center;width:100%;max-width:340px;cursor:zoom-in}
+.poster::before{content:"";position:absolute;inset:-10px;border-radius:26px;background:linear-gradient(140deg,#e9c46a,rgba(233,196,106,.15) 45%,rgba(255,255,255,.08));transform:rotate(-3deg);z-index:0}
+.poster img{position:relative;z-index:1;display:block;width:100%;border-radius:20px;box-shadow:0 24px 60px rgba(0,0,0,.35);border:4px solid #fff;transition:transform .3s}
+.poster:hover img{transform:translateY(-4px) rotate(.6deg)}
+.poster figcaption{position:absolute;z-index:2;bottom:-14px;right:50%;transform:translateX(50%);white-space:nowrap;background:#e9c46a;color:#0b3f30;font-weight:700;font-size:13.5px;border-radius:999px;padding:5px 16px;box-shadow:0 6px 16px rgba(0,0,0,.2)}
+.hero .badge{display:inline-block;font-size:13px;color:#f3dfae;border:1px solid rgba(243,223,174,.4);border-radius:999px;padding:3px 14px;margin-bottom:12px}
+.hero h1{font-family:"Reem Kufi";font-weight:700;font-size:clamp(28px,5vw,44px);margin:0 0 6px;line-height:1.25}
+.hero p{margin:0 auto;color:#d3e8de;font-size:16px;max-width:560px}
+.hstats{display:flex;justify-content:center;gap:12px;margin-top:22px;flex-wrap:wrap}
+.hstats div{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.16);border-radius:14px;padding:10px 20px;min-width:110px}
+.hstats b{display:block;font-size:24px;line-height:1.2}
+.hstats span{font-size:13px;color:#cde4da}
+.search{display:block;position:relative;max-width:560px;margin:24px auto 0}
+.search input{width:100%;font:inherit;font-size:15.5px;padding:14px 48px 14px 16px;border-radius:14px;border:0;outline:none;box-shadow:0 10px 30px rgba(0,0,0,.18)}
+.search svg{position:absolute;right:16px;top:50%;transform:translateY(-50%);color:var(--muted)}
+body.in-sec .hero{display:none}
+
+/* ===== home grid ===== */
+.wrap{max-width:1160px;margin:0 auto;padding:30px 22px 60px}
+.sec-label{display:flex;align-items:center;gap:10px;margin:0 0 16px;font-size:15px;color:var(--muted);font-weight:600}
+.sec-label::after{content:"";flex:1;height:1px;background:var(--line)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:16px}
+.tile{position:relative;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:22px 18px 18px;text-align:center;cursor:pointer;text-decoration:none;display:flex;flex-direction:column;align-items:center;gap:12px;transition:transform .18s, box-shadow .18s, border-color .18s;overflow:hidden}
+.tile::before{content:"";position:absolute;inset:0 0 auto 0;height:4px;background:var(--green);opacity:0;transition:opacity .18s}
+.tile:hover{transform:translateY(-4px);box-shadow:0 14px 32px rgba(13,90,68,.12);border-color:#cfe2d9}
+.tile:hover::before{opacity:1}
+.tile .num{position:absolute;top:12px;right:14px;font-family:"Reem Kufi";font-size:13px;color:var(--gold);font-weight:700}
+.tile .ic{width:68px;height:68px;border-radius:20px;background:var(--green-soft);color:var(--green);display:grid;place-items:center;transition:background .18s,color .18s}
+.tile:hover .ic{background:var(--green);color:#fff}
+.tile h3{margin:0;font-size:16px;font-weight:700;line-height:1.5;min-height:48px;display:flex;align-items:center}
+.tile .cnt{font-size:13px;color:var(--green);background:var(--green-soft);border-radius:999px;padding:2px 12px;font-weight:600}
+.tile.empty .ic{background:#f0eee8;color:#9aa49f}
+.tile.empty .cnt{background:#f0eee8;color:#8f9893;font-weight:500}
+.tile.live .ic{background:#e3f4ec;color:#1a8f5f}
+.tile.live .cnt{background:#1a8f5f;color:#fff}
+.pulse{position:absolute;top:14px;left:14px;width:9px;height:9px;border-radius:50%;background:#22a06b;box-shadow:0 0 0 0 rgba(34,160,107,.5);animation:p 2s infinite}
+@keyframes p{70%{box-shadow:0 0 0 8px rgba(34,160,107,0)}100%{box-shadow:0 0 0 0 rgba(34,160,107,0)}}
+
+/* search results */
+.results{display:none}
+body.searching .results{display:block}
+body.searching .grid-area{display:none}
+
+/* ===== section view ===== */
+.view{display:none}
+body.in-sec .view{display:block}
+body.in-sec .home{display:none}
+.vh{display:flex;align-items:center;gap:16px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;margin-bottom:18px;flex-wrap:wrap}
+.vh .ic{width:64px;height:64px;border-radius:18px;background:var(--green);color:#fff;display:grid;place-items:center;flex:none}
+.vh .lbl{font-size:13px;color:var(--gold);font-weight:700;font-family:"Reem Kufi"}
+.vh h2{margin:0;font-size:24px;line-height:1.35}
+.vh .meta{font-size:14px;color:var(--muted)}
+.vh .acts{margin-inline-start:auto;display:flex;gap:10px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:#fff;border-radius:12px;padding:9px 16px;cursor:pointer;font-size:14.5px;display:inline-flex;align-items:center;gap:7px;text-decoration:none;color:var(--ink)}
+.btn:hover{border-color:var(--green-2)}
+.btn.pri{background:var(--green);border-color:var(--green);color:#fff;font-weight:600}
+.btn.pri:hover{background:var(--green-2)}
+.filters{display:flex;gap:8px;margin:0 0 14px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 14px;font-size:14px;cursor:pointer;color:var(--muted)}
+.chip.on{background:var(--green);border-color:var(--green);color:#fff}
+.grp{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px 18px;margin-bottom:14px}
+.grp-t{display:flex;align-items:center;gap:9px;margin:0 0 12px;font-size:15.5px;font-weight:700;color:var(--green)}
+.grp-t::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--gold);transform:rotate(45deg)}
+.grp-t small{font-weight:500;color:var(--muted);font-size:13px}
+.files{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:10px}
+.file{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:14px;text-decoration:none;background:#fcfbf8;cursor:pointer;text-align:start;color:inherit;width:100%;transition:border-color .15s, box-shadow .15s, transform .15s}
+.file:hover{border-color:var(--green-2);box-shadow:0 6px 16px rgba(13,90,68,.08);transform:translateY(-1px)}
+.fi{width:40px;height:46px;border-radius:8px;display:grid;place-items:center;font-size:10.5px;font-weight:700;flex:none}
+.fi.pdf{background:#fbe9e5;color:var(--red)}
+.fi.img{background:#e6eef8;color:#2c63a5}
+.ft{font-size:14.5px;font-weight:500;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.fs{font-size:12px;color:var(--muted)}
+.fi.doc{background:#e5edfb;color:#2b5bb5}.fi.xls{background:#e4f4ea;color:#1d7a45}.fi.ppt{background:#fcefe2;color:#c2611c}.fi.vid{background:#efe8fa;color:#6a3fb3}.fi.oth{background:#efeee9;color:#6b716d}
+.nw{color:#c2611c;font-weight:700}
+.newdot{position:absolute;top:11px;left:12px;font-size:11px;font-weight:700;color:#fff;background:#d9822b;border-radius:999px;padding:1px 9px}
+.loading{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:#cde4da;margin-top:14px}
+.loading i{width:12px;height:12px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:sp 0.8s linear infinite}
+.loading[hidden]{display:none}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+.intro{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px;margin-bottom:22px}
+.intro-h{display:flex;align-items:center;gap:12px;margin:2px 4px 14px}
+.intro-h h2{margin:0;font-size:19px}
+.intro-h p{margin:2px 0 0;font-size:13.5px;color:var(--muted)}
+.intro-v{position:relative;aspect-ratio:16/9;max-width:820px;margin:0 auto;border-radius:14px;overflow:hidden;background:linear-gradient(160deg,#0d5a44,#0a3d2f)}
+.intro-v iframe,.intro-v video{position:absolute;inset:0;width:100%;height:100%;border:0;background:#0a3d2f;object-fit:contain}
+.intro-play{position:absolute;inset:0;width:100%;border:0;background:none;cursor:pointer;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+.intro-play .pattern{opacity:.07}
+.intro-play .pb{width:84px;height:84px;border-radius:50%;background:rgba(255,255,255,.16);border:2px solid rgba(255,255,255,.5);display:grid;place-items:center;transition:transform .2s, background .2s;position:relative}
+.intro-play:hover .pb{transform:scale(1.07);background:rgba(255,255,255,.26)}
+.intro-play span{font-size:16px;font-weight:600;position:relative}
+.feats{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:28px}
+.feat{display:flex;align-items:center;gap:16px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;text-decoration:none;transition:transform .18s, box-shadow .18s, border-color .18s}
+.feat:hover{transform:translateY(-3px);box-shadow:0 14px 32px rgba(13,90,68,.1);border-color:#cfe2d9}
+.feat .ic{width:60px;height:60px;border-radius:18px;background:var(--gold-soft);color:var(--gold);display:grid;place-items:center;flex:none}
+.feat h3{margin:0;font-size:17px}
+.feat p{margin:2px 0 0;font-size:13.5px;color:var(--muted)}
+.feat .arr{margin-inline-start:auto;font-size:26px;color:#b7beba;line-height:1}
+.ring{position:relative;width:60px;height:60px;flex:none}
+.ring svg{width:100%;height:100%}
+.ring b{position:absolute;inset:0;display:grid;place-items:center;font-size:14px;color:var(--green)}
+.ring circle{transition:stroke-dasharray .8s}
+.logo.has-logo{width:auto;height:auto;background:none;border:0;border-left:1px solid rgba(255,255,255,.3);border-radius:0;padding:0 0 0 14px}
+.logo.has-logo img{height:58px;width:auto;max-width:150px;object-fit:contain;filter:brightness(0) invert(1);display:block}
+/* about */
+.about-hero{background:linear-gradient(160deg,#0d5a44,#0a4a38);color:#fff;border-radius:var(--r);padding:26px;margin-bottom:18px;position:relative;overflow:hidden}
+.about-hero h2{margin:0 0 4px;font-family:"Reem Kufi";font-size:26px}
+.about-hero p{margin:0;color:#d3e8de}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;text-align:center}
+.kpi b{display:block;font-size:26px;color:var(--green);line-height:1.3}
+.kpi span{font-size:13.5px;color:var(--muted)}
+.vm{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+.vm .grp h4{margin:0 0 6px;color:var(--gold);font-size:15px}
+.vm .grp p{margin:0;font-size:15.5px;line-height:1.9}
+.contact{display:flex;flex-wrap:wrap;gap:10px}
+.contact a,.contact span{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:12px;padding:9px 14px;text-decoration:none;font-size:14.5px;background:#fcfbf8}
+.contact a:hover{border-color:var(--green-2)}
+.todo{font-size:13.5px;color:#98a19c}
+/* progress */
+.ov{display:flex;align-items:center;gap:22px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:22px;margin-bottom:18px;flex-wrap:wrap}
+.ov .ring{width:110px;height:110px}
+.ov .ring b{font-size:24px}
+.ov h2{margin:0;font-size:22px}
+.ov p{margin:4px 0 0;color:var(--muted)}
+.legend{display:flex;gap:16px;font-size:13px;color:var(--muted);margin-top:8px;flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-inline-end:5px;vertical-align:middle}
+.prow{display:grid;grid-template-columns:44px 1fr 120px;gap:14px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-bottom:10px;text-decoration:none}
+.prow:hover{border-color:var(--green-2)}
+.prow .pn{width:40px;height:40px;border-radius:12px;background:var(--green-soft);color:var(--green);display:grid;place-items:center}
+.prow h4{margin:0 0 6px;font-size:15px}
+.bar{height:9px;border-radius:99px;background:#efede6;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:99px;transition:width .8s}
+.miss{font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.7}
+.miss b{color:#b4442f;font-weight:600}
+.pv{text-align:left;font-weight:700;font-size:18px}
+.pv small{display:block;font-weight:500;font-size:12px;color:var(--muted)}
+/* delete */
+.fcard{position:relative}
+.fcard .file{padding-left:46px}
+.fcard .del ~ *{}
+.fcard:has(.del) .file{padding-left:76px}
+.gate{position:fixed;inset:0;z-index:100;background:linear-gradient(160deg,#0d5a44,#083528);display:none;align-items:center;justify-content:center;padding:20px;overflow:auto}
+body.locked .gate{display:flex}
+body.locked > header, body.locked > .wrap, body.locked > footer{display:none}
+.gate-box{position:relative;width:min(420px,100%);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:24px;padding:32px 26px;text-align:center;color:#fff;backdrop-filter:blur(6px)}
+.gate-logo{height:74px;filter:brightness(0) invert(1);margin-bottom:12px}
+.gate h1{font-family:"Reem Kufi";margin:0;font-size:28px}
+.gate-sub{margin:4px 0 22px;color:#cfe5db}
+.gate label{display:block;text-align:right;font-size:14px;margin-bottom:6px;color:#e3f0ea}
+.gate input{width:100%;font:inherit;font-size:20px;letter-spacing:2px;text-align:center;direction:ltr;padding:13px;border-radius:14px;border:0;outline:none;text-transform:uppercase}
+.gate input:focus{box-shadow:0 0 0 4px rgba(233,196,106,.5)}
+.gate button{width:100%;margin-top:12px;font:inherit;font-size:16px;font-weight:700;padding:12px;border:0;border-radius:14px;background:#e9c46a;color:#0b3f30;cursor:pointer}
+.gate button:disabled{opacity:.6}
+.gate-msg{min-height:22px;margin:12px 0 0;font-size:14px;color:#ffd6cc}
+.gate-msg.ok{color:#bff0d6}
+.gate-foot{margin:18px 0 0;font-size:12.5px;color:#a9cbbd;line-height:1.8}
+.sess{margin-inline-start:auto;font-size:12.5px;color:#f3dfae;border:1px solid rgba(243,223,174,.35);border-radius:999px;padding:5px 12px;white-space:nowrap}
+.adm-link{margin-inline-start:auto;text-decoration:none;font-size:13.5px;color:#0b3f30;background:#e9c46a;border-radius:999px;padding:7px 14px;font-weight:700;white-space:nowrap}
+.sess+.adm-link,.sess+.adm-link[hidden]+.home-link,.adm-link+.home-link{margin-inline-start:10px}
+/* admin */
+.adm-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.adm-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px}
+.adm-card h3{margin:0 0 14px;font-size:17px}
+.adm-card label{display:block;font-size:13.5px;font-weight:600;margin:0 0 6px}
+.adm-card input,.adm-card select{width:100%;font:inherit;font-size:15px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fcfbf8;margin-bottom:12px}
+.durs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.durs button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 14px;cursor:pointer;font-size:14px}
+.durs button.on{background:var(--green);color:#fff;border-color:var(--green)}
+.code-out{display:none;margin-top:6px;background:var(--green-soft);border-radius:14px;padding:16px;text-align:center}
+.code-out.on{display:block}
+.code-out .cd{font-size:30px;font-weight:700;letter-spacing:3px;direction:ltr;color:var(--green);font-family:ui-monospace,Menlo,monospace}
+.code-out .ex{font-size:13.5px;color:var(--muted);margin:4px 0 12px}
+.code-out .row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.hist{list-style:none;margin:0;padding:0;max-height:330px;overflow:auto}
+.hist li{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
+.hist li b{direction:ltr;font-family:ui-monospace,Menlo,monospace;letter-spacing:1px}
+.hist .st{margin-inline-start:auto;font-size:12px;border-radius:999px;padding:2px 10px}
+.hist .st.on{background:var(--green-soft);color:var(--green)}
+.hist .st.off{background:#f0eee8;color:#8f9893}
+@media (max-width:640px){.adm-grid{grid-template-columns:1fr}.sess{display:none}}
+.fcard .go{position:absolute;left:14px;top:50%;transform:translateY(-50%)}
+.del{position:absolute;left:44px;top:50%;transform:translateY(-50%);width:28px;height:28px;border-radius:8px;border:1px solid transparent;background:none;color:#b3b9b6;cursor:pointer;display:grid;place-items:center}
+.del:hover{color:var(--red);background:#fbe9e5;border-color:#f2cfc7}
+.vdel{color:#ffd6cc !important}
+@media (max-width:640px){.feats,.vm{grid-template-columns:1fr}.prow{grid-template-columns:40px 1fr 64px}.pv{font-size:15px}}
+.tabbar{display:none}
+@media (max-width:640px){
+  header .hd{padding-top:calc(16px + env(safe-area-inset-top))}
+  .tabbar{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:40;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--line);padding:6px 6px calc(6px + env(safe-area-inset-bottom))}
+  .tabbar a{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;text-decoration:none;color:#8a958f;font-size:11.5px;font-weight:600;padding:4px 0;border-radius:12px;-webkit-tap-highlight-color:transparent}
+  .tabbar a.on{color:var(--green)}
+  .tabbar a.on svg{background:var(--green-soft);border-radius:999px;padding:3px 14px;width:52px;box-sizing:content-box;margin:0 -14px}
+  body{padding-bottom:calc(72px + env(safe-area-inset-bottom))}
+  body.locked .tabbar{display:none}
+  .top .home-link{display:none !important}
+  .wrap{padding-top:20px}
+  .tile:active,.file:active,.feat:active{transform:scale(.97)}
+  html{-webkit-tap-highlight-color:transparent}
+}
+@media (display-mode: standalone){ body{overscroll-behavior-y:none} }
+.go{margin-inline-start:auto;color:#a3aca7;flex:none}
+.fi.doc{background:#e5edfb;color:#2b5bb5}.fi.xls{background:#e4f4ea;color:#1d7a45}.fi.ppt{background:#fcefe2;color:#c2611c}.fi.vid{background:#efe8fa;color:#6a3fb3}.fi.oth{background:#efeee9;color:#6b716d}
+.nw{color:#c2611c;font-weight:700}
+.newdot{position:absolute;top:11px;left:12px;font-size:11px;font-weight:700;color:#fff;background:#d9822b;border-radius:999px;padding:1px 9px}
+.loading{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:#cde4da;margin-top:14px}
+.loading i{width:12px;height:12px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:sp 0.8s linear infinite}
+.loading[hidden]{display:none}
+@keyframes sp{to{transform:rotate(360deg)}}
+.file:hover .go{color:var(--green-2)}
+.none{font-size:14px;color:#98a19c;border:1.5px dashed var(--line);border-radius:12px;padding:14px;text-align:center}
+.empty-sec{text-align:center;padding:50px 20px;background:var(--card);border:1px solid var(--line);border-radius:var(--r)}
+.empty-sec .ic{width:72px;height:72px;margin:0 auto 12px;border-radius:20px;background:#f0eee8;color:#9aa49f;display:grid;place-items:center}
+.empty-sec h3{margin:0 0 4px}
+.empty-sec p{margin:0 0 16px;color:var(--muted)}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:22px}
+.pager a{flex:1;max-width:48%;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 16px;text-decoration:none;font-size:14.5px}
+.pager a:hover{border-color:var(--green-2)}
+.pager small{display:block;color:var(--muted);font-size:12px}
+.pager .nx{text-align:left;margin-inline-start:auto}
+mark{background:#fbe7a6;color:inherit;border-radius:3px}
+.live-frame{width:100%;height:520px;border:0;display:block;background:#fafafa;border-radius:12px}
+
+footer{text-align:center;color:var(--muted);font-size:13px;padding:0 20px 34px}
+.credit{text-align:center;padding:26px 20px 40px;color:var(--muted);font-size:13px}
+.cr-school{opacity:.55;margin-bottom:4px}
+.cr-by{font-size:12px;opacity:.45;letter-spacing:.2px}
+footer.ft-soft{opacity:.55;letter-spacing:.2px;padding-top:6px}
+footer b{color:var(--ink);font-weight:600}
+
+/* modal & lightbox */
+.modal,.lb{position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;padding:16px}
+.modal{background:rgba(10,20,16,.55)}
+.lb{background:rgba(10,20,16,.88);flex-direction:column}
+.modal.on,.lb.on{display:flex}
+.mbox{background:#fff;border-radius:20px;width:min(500px,100%);padding:24px;box-shadow:0 24px 60px rgba(0,0,0,.25)}
+.mbox h4{margin:0 0 2px;font-size:19px}
+.msub{margin:0 0 14px;color:var(--muted);font-size:14px}
+.steps{margin:0 0 12px;padding-inline-start:22px;font-size:15px;line-height:1.95}
+.note{font-size:13.5px;color:var(--green);background:var(--green-soft);border-radius:10px;padding:9px 12px;margin:0 0 16px}
+.m-actions{display:flex;gap:10px}
+.m-actions .btn.pri{flex:1;justify-content:center}
+.viewer{position:fixed;inset:0;z-index:70;background:rgba(8,18,14,.9);display:none;flex-direction:column;padding:14px}
+.viewer.on{display:flex}
+.vbar{display:flex;align-items:center;gap:10px;color:#fff;max-width:1100px;width:100%;margin:0 auto 10px}
+.vt{flex:1;font-weight:600;font-size:15.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vk{font-size:11.5px;font-weight:700;background:rgba(255,255,255,.15);border-radius:6px;padding:2px 8px;flex:none}
+.vbtn{color:#fff;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);border-radius:10px;padding:7px 12px;cursor:pointer;text-decoration:none;font-size:14px;white-space:nowrap}
+.vbtn:hover{background:rgba(255,255,255,.24)}
+.vbody{flex:1;max-width:1100px;width:100%;margin:0 auto;border-radius:14px;overflow:hidden;background:#fff;display:flex;align-items:center;justify-content:center;position:relative}
+.vbody iframe{width:100%;height:100%;border:0;display:block}
+.vbody img{max-width:100%;max-height:100%;object-fit:contain}
+.vbody video{width:100%;height:100%;background:#000}
+.vload{position:absolute;color:var(--muted);font-size:14px}
+.playb{position:absolute;bottom:-4px;left:-4px;width:18px;height:18px;border-radius:50%;background:#6a3fb3;color:#fff;font-size:8px;display:grid;place-items:center;border:2px solid #fff}
+.fi{position:relative}
+@media (max-width:640px){.viewer{padding:0}.vbar{padding:10px;margin:0;background:#0b3f30}.vbody{border-radius:0}.vbtn#vOpen{display:none}}
+.lb img{max-width:min(960px,100%);max-height:calc(100vh - 120px);border-radius:10px;background:#fff}
+.lb-bar{color:#fff;display:flex;gap:10px;align-items:center;margin-bottom:12px;width:min(960px,100%)}
+.lb-bar span{flex:1;font-weight:500}
+.lb-bar a,.lb-bar button{color:#fff;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);border-radius:10px;padding:6px 12px;cursor:pointer;text-decoration:none;font-size:14px}
+
+@media (max-width:900px){.hero{grid-template-columns:1fr;gap:34px}.poster{order:-1;max-width:290px}}
+@media (max-width:640px){
+  .grid{grid-template-columns:repeat(2,1fr);gap:12px}
+  .tile{padding:18px 10px 14px}
+  .tile .ic{width:56px;height:56px;border-radius:16px}
+  .tile h3{font-size:14px;min-height:42px}
+  .files{grid-template-columns:1fr}
+  .vh .acts{width:100%}
+  .vh .acts .btn{flex:1;justify-content:center}
+  .hstats div{min-width:0;flex:1;padding:8px 10px}
+  .top .t2{font-size:17px}
+  body.in-sec .top .t1{display:none}
+  .top .home-link{padding:7px 12px;font-size:13.5px}
+  .live-frame{height:420px}
+  .poster{max-width:250px}
+}
+</style>
+</head>
+<body class="locked">
+<div class="gate" id="gate">
+  <div class="pattern"></div>
+  <div class="gate-box">
+    <img class="gate-logo" src="files/moe-logo.png" alt="وزارة التعليم">
+    <h1>متوسطة مكة المكرمة</h1>
+    <p class="gate-sub">ملف شواهد الأداء المدرسي</p>
+    <form id="gateForm" autocomplete="off">
+      <label for="gateIn">أدخل رمز الدخول</label>
+      <input id="gateIn" inputmode="text" placeholder="مثال: K7P2Q-9XA4" autocomplete="one-time-code" spellcheck="false">
+      <button type="submit" id="gateBtn">دخول</button>
+      <p class="gate-msg" id="gateMsg"></p>
+    </form>
+    <p class="gate-foot">الدخول برمز مؤقت يصدره مدير المدرسة.<br>للحصول على رمز تواصل مع إدارة المدرسة.</p>
+  </div>
+</div>
+<header>
+  <div class="pattern"></div>
+  <div class="hd">
+    <div class="top">
+      <a class="logo" id="logo" href="#" aria-label="الصفحة الرئيسية"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10l9-6 9 6"/><path d="M5 10v9h14v-9"/><path d="M10 19v-5h4v5"/></svg></a>
+      <div><p class="t1">الإدارة العامة للتعليم بمحافظة جدة</p><p class="t2">متوسطة مكة المكرمة</p></div>
+      <a class="adm-link" href="index.html" style="margin-inline-end:6px">البوابة ←</a><span class="sess" id="sess" hidden></span><a class="adm-link" id="admLink" href="#admin" hidden>🔑 رموز الدخول</a>
+      <a class="home-link" href="#"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>الصفحة الرئيسية</a>
+    </div>
+    <div class="hero">
+      <div class="hero-txt">
+      <span class="badge">تعليم عام – دمج فكري • ١٤٤٨هـ</span>
+      <h1>ملف شواهد الأداء المدرسي</h1>
+      <p>اختر المحور لعرض شواهده، أو ابحث عن أي تقرير أو خطة أو برنامج.</p>
+      <div class="hstats"><div id="stStuW"><b id="stStu"></b><span>طالباً</span></div><div><b id="stF"></b><span>شاهد</span></div><div><b id="stS"></b><span>محوراً</span></div><div><b id="stD"></b><span>محاور موثّقة</span></div></div>
+      <div class="loading" id="loading" hidden><i></i><span>جارٍ تحميل أحدث الشواهد من Google Drive…</span></div>
+      <label class="search"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" type="search" placeholder="ابحث في جميع الشواهد…" autocomplete="off"></label>
+      </div>
+      <figure class="poster" id="poster"><img src="files/poster.jpg" alt="متوسطة مكة المكرمة بجدة – هويتنا حاضرة في كل درس"></figure>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <section class="home">
+    <div class="grid-area">
+      <div class="intro" id="intro" hidden>
+        <div class="intro-h"><div><h2>فيديو تعريفي بالمدرسة</h2><p>جولة سريعة في متوسطة مكة المكرمة</p></div></div>
+        <div class="intro-v" id="introV"></div>
+      </div>
+      <div class="feats">
+        <a class="feat" href="#about"><div class="ic"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/></svg></div><div><h3>عن المدرسة</h3><p>الرؤية والرسالة وبيانات المدرسة والتواصل</p></div><span class="arr">‹</span></a>
+        <a class="feat" href="#progress"><div class="ring" id="ring"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.5" fill="none" stroke="#e7f2ed" stroke-width="4"/><circle id="ringC" cx="18" cy="18" r="15.5" fill="none" stroke="#13805f" stroke-width="4" stroke-linecap="round" stroke-dasharray="0 100" pathLength="100" transform="rotate(-90 18 18)"/></svg><b id="ringT"></b></div><div><h3>متابعة الإنجاز</h3><p id="progLine">نسبة اكتمال الشواهد في كل محور</p></div><span class="arr">‹</span></a>
+      </div>
+      <p class="sec-label">محاور الملف</p>
+      <div class="grid" id="grid"></div>
+    </div>
+    <div class="results" id="results"></div>
+  </section>
+  <section class="view" id="view"></section>
+</div>
+<nav class="tabbar" id="tabbar" aria-label="التنقل">
+  <a href="#" data-tab="home"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 4l9 6.5"/><path d="M5 9.5V20h14V9.5"/></svg><span>الرئيسية</span></a>
+  <a href="#search" data-tab="search"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span>بحث</span></a>
+  <a href="#progress" data-tab="progress"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 20V11M10 20V5M16 20v-6M22 20H2"/></svg><span>الإنجاز</span></a>
+  <a href="#about" data-tab="about"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/></svg><span>المدرسة</span></a>
+</nav>
+<footer class="credit"><div class="cr-school">متوسطة مكة المكرمة © ٢٠٢٦</div><div class="cr-by">تصميم وتطوير: أ. سعد الزهراني</div></footer>
+
+<div class="modal" id="modal" role="dialog" aria-modal="true">
+  <div class="mbox">
+    <h4>إضافة شاهد</h4>
+    <p class="msub" id="mSub"></p>
+    <ol class="steps">
+      <li id="mStep1">اضغط الزر بالأسفل ليفتح مجلد المدرسة في Google Drive.</li>
+      <li>ادخل <span id="mIn">مجلد <b id="mFolder"></b> ثم</span> المجلد الفرعي المناسب.</li>
+      <li>اضغط <b>جديد (+)</b> ثم <b>تحميل ملف</b>، واختر الشاهد.</li>
+    </ol>
+    <p class="note" id="mNote">يظهر الشاهد مباشرة في أيقونة «المجلد المباشر» في الصفحة الرئيسية.</p>
+    <div class="m-actions"><a class="btn pri" id="mGo" href="https://drive.google.com/drive/folders/1fcMGBvC4B5uytVEPDJ-tO2LoQwBcJx82" target="_blank" rel="noopener">فتح مجلد Google Drive</a><button class="btn" id="mClose">إغلاق</button></div>
+  </div>
+</div>
+<div class="modal" id="delModal" role="dialog" aria-modal="true">
+  <div class="mbox">
+    <h4>حذف شاهد</h4>
+    <p class="msub" id="dT"></p>
+    <ol class="steps">
+      <li>اضغط الزر بالأسفل ليفتح الشاهد في Google Drive.</li>
+      <li>اضغط النقاط الثلاث <b>⋮</b> في الأعلى، ثم <b>نقل إلى المهملات</b>.</li>
+      <li>ارجع للموقع وحدّث الصفحة، فيختفي الشاهد.</li>
+    </ol>
+    <p class="note" style="background:#fdf1ee;color:#a03d2a">الحذف متاح فقط لمن لديه صلاحية «محرّر» على المجلد. ويمكن استرجاع الملف من المهملات خلال ٣٠ يوماً.</p>
+    <div class="m-actions"><a class="btn pri" id="dGo" target="_blank" rel="noopener" style="background:#b4442f;border-color:#b4442f">فتح الشاهد في Drive</a><button class="btn" id="dClose">إلغاء</button></div>
+  </div>
+</div>
+<div class="viewer" id="viewer" role="dialog" aria-modal="true">
+  <div class="vbar">
+    <span class="vk" id="vK"></span><span class="vt" id="vT"></span>
+    <button class="vbtn vdel" id="vDel" hidden>🗑 حذف</button>
+    <a class="vbtn" id="vOpen" target="_blank" rel="noopener">فتح في نافذة جديدة ↗</a>
+    <button class="vbtn vx" id="vX" aria-label="إغلاق">✕</button>
+  </div>
+  <div class="vbody" id="vBody"></div>
+</div>
+
+<script>
+/* ===== بيانات المدرسة: عدّلها من هنا ===== */
+const SCHOOL = {
+ "logo": "files/moe-logo.png",
+ "principal": "إبراهيم علي آل صمع",
+ "students": "٨٦٠",
+ "teachers": "٥٤",
+ "classes": "٢٦",
+ "stage": "المرحلة المتوسطة · تعليم عام ودمج فكري",
+ "district": "",
+ "vision": "بيئة تعليمية دامجة ومحفّزة، تُخرّج جيلاً متعلماً مبدعاً، معتزاً بدينه ووطنه، قادراً على المنافسة.",
+ "mission": "نقدّم تعليماً نوعياً دامجاً يراعي الفروق الفردية ويحتضن جميع الطلاب، عبر كوادر مؤهلة وبيئة آمنة محفّزة، وشراكة فاعلة مع الأسرة والمجتمع، تحقيقاً لمستهدفات رؤية المملكة ٢٠٣٠.",
+ "phone": "0505623207",
+ "email": "32455@mkhb.moe.gov.sa",
+ "x": "",
+ "map": "https://maps.app.goo.gl/fhwNJ41QnNiTYXHX6",
+ "video": "files/intro-v3.mp4",
+ "whatsapp": "966505623207",
+ "hours": "أثناء الدوام الرسمي",
+ "videoPoster": "files/intro-poster.jpg?v=3"
+};
+let DATA = [{"n": 1, "title": "الادارة المدرسية", "groups": [{"name": "التقويم الذاتي وخطة التحسين", "order": 1, "files": []}, {"name": "الخطة التشغيلية ومتابعتها وخطة التحسين", "order": 2, "files": [{"t": "تحفيز الأسرة على المشاركة في الخطة التشغيلية وبرامج المدرسة", "f": "files/7a49459a48.jpg", "k": "img", "s": 162496}]}, {"name": "اللجان والفرق", "order": 3, "files": []}, {"name": "التكاليف", "order": 4, "files": []}, {"name": "النمو المهني وأخلاقيات المهنة", "order": 5, "files": [{"t": "مشر اخلاقيات المهنة في قروب منسوبي المدرسة", "f": "files/7655702b30.jpg", "k": "img", "s": 157467}]}, {"name": "الاجتماعات والتعاميم", "order": 6, "files": []}]}, {"n": 2, "title": "وكيل الشؤون التعليمية", "groups": [{"name": "مجتمعات التعلم المهنية › استراتيجيات التدريس الحضوري", "order": 1, "files": []}, {"name": "مجتمعات التعلم المهنية › استراتيجيات التدريس عن بعد", "order": 1, "files": [{"t": "تقرير توثيق درس الارتكاز الخلفي - منصة مدرستي", "f": "files/668c30c9ae.pdf", "k": "pdf", "s": 585956}, {"t": "نموذج توثيق الممارسات التعليمية", "f": "files/2c66d7ac0e.pdf", "k": "pdf", "s": 429182}, {"t": "نموذج توثيق الممارسات التعليمية أ.أحمد سعيد الزهراني", "f": "files/f976ff93e6.pdf", "k": "pdf", "s": 460325}, {"t": "نموذج توثيق الممارسات التعليمية(1)", "f": "files/ee6dffb900.pdf", "k": "pdf", "s": 349776}, {"t": "نموذج توثيق منصة مدرستي اتخاذ القرارات", "f": "files/c6a39aae8f.pdf", "k": "pdf", "s": 1773263}]}, {"name": "التطوير المهني", "order": 2, "files": []}, {"name": "منصة مدرستي", "order": 3, "files": []}, {"name": "توزيع المناهج", "order": 4, "files": []}]}, {"n": 3, "title": "وكيل شؤون الطلاب", "groups": [{"name": "الانضباط المدرسي", "order": 1, "files": [{"t": "تقرير برنامج قيمة الانضباط", "f": "files/21cae00fa2.pdf", "k": "pdf", "s": 392178}]}, {"name": "السلوك الايجابي", "order": 2, "files": [{"t": "كشف السلوك الايجابي 1448-05-30", "f": "files/88c8143e95.pdf", "k": "pdf", "s": 258446}]}]}, {"n": 4, "title": "التحصيل الدراسي ونافس", "groups": [{"name": "", "order": 99, "files": []}]}, {"n": 5, "title": "التوجيه الطلابي", "groups": [{"name": "البرامج", "order": 99, "files": [{"t": "الانتماء للوطن", "f": "files/4d2ba13e38.pdf", "k": "pdf", "s": 800229}, {"t": "التهيئة الارشادية1448", "f": "files/3282782f0e.pdf", "k": "pdf", "s": 1676379}, {"t": "تفرير عن الاستعداد والتهئة للاختبارات", "f": "files/94532107b9.pdf", "k": "pdf", "s": 309429}, {"t": "تفرير عن التنمر", "f": "files/36d518e86a.pdf", "k": "pdf", "s": 370691}, {"t": "تقرير اجتماع اولياء الامور", "f": "files/2cdb4aa644.pdf", "k": "pdf", "s": 2175357}, {"t": "تقرير التهيئة", "f": "files/8771034805.pdf", "k": "pdf", "s": 1550731}, {"t": "تقرير المجلس الطلابي", "f": "files/a785cd1024.pdf", "k": "pdf", "s": 410339}, {"t": "تقرير تفعيل اليوم العالمي لصحة النفسية", "f": "files/b840389545.pdf", "k": "pdf", "s": 348083}, {"t": "تقرير عن الانضباط", "f": "files/79c8810c62.pdf", "k": "pdf", "s": 429302}, {"t": "تقرير عن السلوك والمواظبه", "f": "files/7a1029fec2.pdf", "k": "pdf", "s": 877744}, {"t": "تقرير عن تعزيز السلوك الايجابي 1448هـ", "f": "files/4f2b5899af.pdf", "k": "pdf", "s": 303746}, {"t": "تقرير عن خصائص النمو 1448ه", "f": "files/b8170f1d4a.pdf", "k": "pdf", "s": 415051}, {"t": "تكرم المتفوقين2", "f": "files/0d7c6a11bd.pdf", "k": "pdf", "s": 488889}]}, {"name": "الخطط", "order": 99, "files": [{"t": "خطة التوجيه الطلابي الفصلية الفصل الدراسي الأول - 1448", "f": "files/0a8dc99b3a.pdf", "k": "pdf", "s": 203694}, {"t": "دغريري – خطة التوجيه والارشادالفصل الاول١٤٤8", "f": "files/3b55e8dd6b.pdf", "k": "pdf", "s": 3416237}, {"t": "عبدالله – خطة التوجيه والارشادالفصل الاول١٤٤8", "f": "files/30f5d670de.pdf", "k": "pdf", "s": 3416116}, {"t": "موسى – خطة التوجيه والارشادالفصل الاول١٤٤8", "f": "files/4f74487858.pdf", "k": "pdf", "s": 3417029}]}, {"name": "مجالس اولياء امور الطلاب", "order": 99, "files": [{"t": "تقرير اجتماع اولياء الامور", "f": "files/2cdb4aa644.pdf", "k": "pdf", "s": 2175357}]}]}, {"n": 6, "title": "السلوك الايجابي وحقوق المتعلمين", "groups": [{"name": "السلوك الايجابي › برامج ومبادرات تعزز السلوك الايجابي", "order": 99, "files": [{"t": "تقرير التهيئة", "f": "files/8771034805.pdf", "k": "pdf", "s": 1550731}, {"t": "تقرير عن تعزيز السلوك الايجابي 1448هـ", "f": "files/4f2b5899af.pdf", "k": "pdf", "s": 303746}]}, {"name": "السلوك الايجابي › رصد السلوك الايجابي", "order": 99, "files": []}, {"name": "حقوق المتعلمين", "order": 99, "files": [{"t": "نشر حقوق المتعلمين وواجباتهم في قروبات الطلاب ١", "f": "files/957c14af39.jpg", "k": "img", "s": 133879}, {"t": "نشر حقوق المتعلمين وواجباتهم في قروبات الطلاب ٢", "f": "files/c89be46b3c.jpg", "k": "img", "s": 110300}]}]}, {"n": 7, "title": "النشاط الطلابي", "groups": [{"name": "الانشطة اللاصفية", "order": 99, "files": []}, {"name": "برامج ومبادرات دمج الطلاب ذوو الاعاقة", "order": 99, "files": []}]}, {"n": 8, "title": "المبادرات والاحتفالات والتكريم والمسابقات", "groups": [{"name": "", "order": 99, "files": [{"t": "اليوم العالمي للمعلم 1448هـ", "f": "files/5b517e0582.pdf", "k": "pdf", "s": 390759}, {"t": "لاعلان عن مبادرة الصف المثالي في قروبات الطلاب", "f": "files/9647330da0.jpg", "k": "img", "s": 103830}]}]}, {"n": 9, "title": "البيئة المدرسية والأمن والسلامة", "groups": [{"name": "الأمن والسلامة والإخلاء", "order": 99, "files": [{"t": "اخلاء الفصل الأول 1448هـ", "f": "files/e7eee0803a.pdf", "k": "pdf", "s": 350344}, {"t": "تقرير توثيق التواصل مع الأسر لإعلان تجربة الإخلاء", "f": "files/f737536e6a.pdf", "k": "pdf", "s": 440506}, {"t": "تقرير مبادرة أصدقاء الأمن والسلامة", "f": "files/5b6aa77138.pdf", "k": "pdf", "s": 391087}, {"t": "ملف الأمن والسلامة", "f": "files/295032e436.pdf", "k": "pdf", "s": 38113930}]}, {"name": "النظافة", "order": 99, "files": []}, {"name": "بلاغات الصيانة", "order": 99, "files": [{"t": "بلاغ صيانة اجهزة تقنية", "f": "files/ce888e815a.pdf", "k": "pdf", "s": 131916}, {"t": "بلاغ صيانة الكاميرات", "f": "files/7d92640451.pdf", "k": "pdf", "s": 150624}, {"t": "بلاغ صيانة المظلة", "f": "files/e29c48019d.pdf", "k": "pdf", "s": 148075}, {"t": "بلاغ صيانة كوالين الأبواب", "f": "files/b3c79aa196.pdf", "k": "pdf", "s": 146975}, {"t": "مشهد انجاز صيانة ١", "f": "files/065aa9837f.pdf", "k": "pdf", "s": 725916}, {"t": "مشهد انجاز صيانة ٢", "f": "files/3c8b583983.pdf", "k": "pdf", "s": 879567}]}]}, {"n": 10, "title": "الموجه الصحي", "groups": [{"name": "", "order": 99, "files": []}]}, {"n": 11, "title": "الموهوبين", "groups": [{"name": "", "order": 99, "files": []}]}, {"n": 12, "title": "الشراكات المجتمعية", "groups": [{"name": "", "order": 99, "files": []}]}, {"n": 13, "title": "برنامج يسير", "groups": [{"name": "", "order": 99, "files": []}]}, {"n": 14, "title": "الدمج الفكري", "groups": [{"name": "", "order": 99, "files": []}]}];
+const FID = '1fcMGBvC4B5uytVEPDJ-tO2LoQwBcJx82';
+const API_KEY = 'AIzaSyB8olQ_TZvRxdIAXsWItyy4xZU0x6zPzes';
+let LIVE = false; const FOLDER_OF = {};
+const ICONS = {
+ 1:'<path d="M3 21h18"/><path d="M5 21V8l7-4 7 4v13"/><path d="M9 21v-5h6v5"/><path d="M9 10h.01M15 10h.01M12 10h.01"/>',
+ 2:'<path d="M2 5.5A2.5 2.5 0 0 1 4.5 3H11v17H4.5A2.5 2.5 0 0 0 2 22z"/><path d="M22 5.5A2.5 2.5 0 0 0 19.5 3H13v17h6.5a2.5 2.5 0 0 1 2.5 2z"/>',
+ 3:'<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.4"/><path d="M15.5 14.3A5 5 0 0 1 21 19"/>',
+ 4:'<path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/><path d="M19 8l2-2-2-2"/>',
+ 5:'<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',
+ 6:'<path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>',
+ 7:'<circle cx="12" cy="12" r="9"/><path d="M12 3c2.5 3 2.5 15 0 18M3.5 9h17M3.5 15h17"/>',
+ 8:'<circle cx="12" cy="9" r="5.5"/><path d="M8.5 13.5L7 21l5-2.5 5 2.5-1.5-7.5"/>',
+ 9:'<path d="M12 2.5c3 2.6 6 3.3 8 3.3V12c0 5-3.5 8-8 9.5C7.5 20 4 17 4 12V5.8c2 0 5-.7 8-3.3z"/><path d="M12 8v5M12 16h.01"/>',
+ 10:'<path d="M20.8 8.6A5.2 5.2 0 0 0 12 5.3a5.2 5.2 0 0 0-8.8 3.3c0 5.4 8.8 11 8.8 11s8.8-5.6 8.8-11z"/><path d="M7 12h3l1.5-2.5 2 4.5 1.5-2h2"/>',
+ 11:'<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>',
+ 12:'<path d="M11 17l2 2a1.4 1.4 0 0 0 2-2"/><path d="M14 14l2.5 2.5a1.4 1.4 0 0 0 2-2l-3.8-3.8a3 3 0 0 0-4.2 0l-.9.9a1.4 1.4 0 0 1-2-2l2.8-2.8a5 5 0 0 1 6 -.8l.3.2a2 2 0 0 0 1.5.2L21 6"/><path d="M21 3l1 8h-2"/><path d="M3 3L2 11l6.5 6.5a1.4 1.4 0 0 0 2-2"/><path d="M3 4h8"/>',
+ 13:'<circle cx="6" cy="19" r="2.5"/><circle cx="18" cy="5" r="2.5"/><path d="M8.5 19H16a3.5 3.5 0 0 0 0-7H8a3.5 3.5 0 0 1 0-7h7.5"/>',
+ 14:'<path d="M14 4a2 2 0 0 0-4 0v1H6a1 1 0 0 0-1 1v4h1a2 2 0 0 1 0 4H5v4a1 1 0 0 0 1 1h4v-1a2 2 0 0 1 4 0v1h4a1 1 0 0 0 1-1v-4h-1a2 2 0 0 1 0-4h1V6a1 1 0 0 0-1-1h-4z"/>',
+ live:'<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M12 11v5M9.5 13.5L12 11l2.5 2.5"/>'
+};
+const ic = (k,s=30)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${ICONS[k]}</svg>`;
+const AR = d => String(d).replace(/\d/g, x => '٠١٢٣٤٥٦٧٨٩'[x]);
+const size = b => b > 1048576 ? AR((b/1048576).toFixed(1)) + ' م.ب' : AR(Math.max(1, Math.round(b/1024))) + ' ك.ب';
+const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const norm = s => s.replace(/[أإآ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي').replace(/[ً-ْـ]/g,'').toLowerCase();
+const count = s => s.groups.reduce((a,g)=>a+g.files.length,0);
+const plural = n => n===0 ? 'لا توجد شواهد بعد' : n===1 ? 'شاهد واحد' : n===2 ? 'شاهدان' : AR(n)+' '+(n<=10?'شواهد':'شاهداً');
+const goIc = '<svg class="go" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>';
+
+
+function hl(t,q){ if(!q) return esc(t); const i=norm(t).indexOf(norm(q)); if(i<0) return esc(t); return esc(t.slice(0,i))+'<mark>'+esc(t.slice(i,i+q.length))+'</mark>'+esc(t.slice(i+q.length)); }
+const KINDS={pdf:['PDF','pdf','ملف PDF'],img:['صورة','img','صورة'],doc:['Word','doc','مستند'],xls:['Excel','xls','جدول'],ppt:['عرض','ppt','عرض تقديمي'],vid:['فيديو','vid','فيديو'],oth:['ملف','oth','ملف']};
+function fileCard(f,q){
+  const [lab,cls,desc]=KINDS[f.k]||KINDS.oth;
+  const meta = desc + (f.s?' • '+size(f.s):'') + (isNew(f)?' • <b class="nw">جديد</b>':'');
+  const play = f.k==='vid' ? '<span class="playb">▶</span>' : '';
+  const del = (f.drive && CURRENT && CURRENT.admin) ? `<button class="del" data-del="${esc(f.f)}" data-t="${esc(f.t)}" title="حذف الشاهد" aria-label="حذف الشاهد"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>` : '';
+  return `<div class="fcard"><button class="file" data-view="${esc(f.id||f.f)}" data-src="${esc(f.f)}" data-k="${f.k}" data-drive="${f.drive?1:''}" data-t="${esc(f.t)}"><span class="fi ${cls}">${lab}${play}</span><span><div class="ft">${hl(f.t,q)}</div><div class="fs">${meta}</div></span><svg class="go" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>${del}</div>`;
+}
+
+/* home grid */
+const grid = document.getElementById('grid');
+function renderStats(){
+  document.getElementById('stF').textContent = AR(DATA.reduce((a,s)=>a+count(s),0));
+  document.getElementById('stS').textContent = AR(DATA.length);
+  document.getElementById('stD').textContent = AR(DATA.filter(s=>count(s)>0).length);
+}
+function renderGrid(){
+  renderStats(); renderRing();
+  const liveTile = LIVE ? '' : `<a class="tile live" href="#live"><span class="pulse"></span><div class="ic">${ic('live',32)}</div><h3>المجلد المباشر</h3><span class="cnt">يتحدّث تلقائياً</span></a>`;
+  grid.innerHTML = liveTile + DATA.map(s=>{ const n=count(s); const nw=s.groups.some(g=>g.files.some(isNew));
+    return `<a class="tile ${n?'':'empty'}" href="#s${s.n}"><span class="num">${AR(s.n)}</span>${nw?'<span class="newdot">جديد</span>':''}<div class="ic">${ic(ICONS[s.n]?s.n:'live',32)}</div><h3>${esc(s.title)}</h3><span class="cnt">${plural(n)}</span></a>`; }).join('');
+}
+const isNew = f => f.d && (Date.now()-Date.parse(f.d) < 7*864e5);
+
+/* section view */
+const view = document.getElementById('view');
+let kind='all';
+function renderSec(n){
+  const i = DATA.findIndex(s=>s.n===n); const s = DATA[i]; const total = count(s);
+  const prev = DATA[i-1], next = DATA[i+1];
+  const kinds = new Set(s.groups.flatMap(g=>g.files.map(f=>f.k)));
+  let body = '';
+  if(!total){
+    body = `<div class="empty-sec"><div class="ic">${ic(s.n,34)}</div><h3>لم تُرفع شواهد لهذا المحور بعد</h3><p>كن أول من يضيف شاهداً لهذا المحور.</p><button class="btn pri" data-add="${s.n}">＋ إضافة شاهد</button></div>`;
+  } else {
+    if(kinds.size>1) body += `<div class="filters"><button class="chip ${kind==='all'?'on':''}" data-k="all">الكل</button><button class="chip ${kind==='pdf'?'on':''}" data-k="pdf">ملفات PDF</button><button class="chip ${kind==='img'?'on':''}" data-k="img">صور</button></div>`;
+    s.groups.forEach(g=>{
+      const fs = g.files.filter(f=>kind==='all'||f.k===kind);
+      if(kind!=='all' && !fs.length) return;
+      body += `<div class="grp">${g.name?`<p class="grp-t">${esc(g.name)} <small>(${AR(fs.length)})</small></p>`:''}`;
+      body += fs.length ? `<div class="files">${fs.map(f=>fileCard(f)).join('')}</div>` : `<div class="none">لا توجد شواهد مرفوعة بعد</div>`;
+      body += '</div>';
+    });
+  }
+  view.innerHTML = `
+    <div class="vh"><div class="ic">${ic(s.n,32)}</div><div><div class="lbl">المحور ${AR(s.n)}</div><h2>${esc(s.title)}</h2><div class="meta">${plural(total)}</div></div>
+      <div class="acts"><a class="btn" href="#"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>رجوع</a><button class="btn pri" data-add="${s.n}">＋ إضافة شاهد</button></div></div>
+    ${body}
+    <div class="pager">${prev?`<a href="#s${prev.n}"><small>المحور السابق</small>${esc(prev.title)}</a>`:'<span></span>'}${next?`<a class="nx" href="#s${next.n}"><small>المحور التالي</small>${esc(next.title)}</a>`:''}</div>`;
+}
+function renderLive(){
+  view.innerHTML = `
+    <div class="vh"><div class="ic" style="background:#1a8f5f">${ic('live',32)}</div><div><div class="lbl">يتحدّث تلقائياً</div><h2>المجلد المباشر</h2><div class="meta">كل ما يُرفع في مجلد المدرسة على Google Drive يظهر هنا فوراً.</div></div>
+      <div class="acts"><a class="btn" href="#">رجوع</a><a class="btn pri" href="https://drive.google.com/drive/folders/${FID}" target="_blank" rel="noopener">فتح في Google Drive ↗</a></div></div>
+    <div class="grp"><iframe class="live-frame" src="https://drive.google.com/embeddedfolderview?id=${FID}#list" title="مجلد المدرسة في Google Drive"></iframe></div>`;
+}
+
+/* search */
+const q = document.getElementById('q'), results = document.getElementById('results');
+function doSearch(){
+  const v = q.value.trim();
+  document.body.classList.toggle('searching', !!v);
+  if(!v){ results.innerHTML=''; return; }
+  const nv = norm(v); let html='', total=0;
+  DATA.forEach(s=>{
+    const hits = s.groups.flatMap(g=>g.files.filter(f=>norm(f.t).includes(nv)||norm(g.name).includes(nv)||norm(s.title).includes(nv)));
+    const seen=new Set(); const u=hits.filter(f=>!seen.has(f.f+f.t)&&seen.add(f.f+f.t));
+    if(!u.length) return; total+=u.length;
+    html += `<div class="grp"><p class="grp-t"><a href="#s${s.n}" style="text-decoration:none">${AR(s.n)} • ${esc(s.title)}</a> <small>(${AR(u.length)})</small></p><div class="files">${u.map(f=>fileCard(f,v)).join('')}</div></div>`;
+  });
+  results.innerHTML = `<p class="sec-label">نتائج البحث (${AR(total)})</p>` + (html || '<div class="empty-sec"><h3>لا توجد نتائج</h3><p>جرّب كلمة أخرى.</p></div>');
+}
+let tm; q.addEventListener('input',()=>{ clearTimeout(tm); tm=setTimeout(doSearch,120); });
+
+
+/* ===== access codes ===== */
+const ACC = { secret:'dc7ede73b02dce609bf041e8a52898f2', adminHash:'398dc46ba4b05fb9b99d80c49af7cc065c504fb08ca21d0862797beadab2b9b4' };
+const SKEY='mk48_access';
+async function sha(s){ const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join(''); }
+const B36=n=>n.toString(36).toUpperCase();
+async function sigFor(expMin){ const h=await sha(ACC.secret+':'+expMin); return B36(parseInt(h.slice(0,8),16)).padStart(6,'0').slice(-5); }
+async function makeCode(hours){ const exp=Math.floor(Date.now()/60000)+Math.round(hours*60); return {code:B36(exp)+'-'+await sigFor(exp), exp:exp*60000}; }
+async function checkCode(raw){
+  const c=raw.trim().toUpperCase().replace(/[\s_]/g,'').replace(/[–—]/g,'-');
+  const m=c.match(/^([0-9A-Z]{4,8})-?([0-9A-Z]{5})$/); if(!m) return null;
+  const exp=parseInt(m[1],36); if(!exp) return null;
+  if(await sigFor(exp)!==m[2]) return null;
+  return {exp:exp*60000};
+}
+function getSess(){ try{ const s=JSON.parse(localStorage.getItem(SKEY)||'null'); if(s && s.exp>Date.now()) return s; }catch(e){} return null; }
+function setSess(s){ try{ localStorage.setItem(SKEY,JSON.stringify(s)); }catch(e){} CURRENT=s; }
+let CURRENT=null;
+const fmtDate=ms=>new Date(ms).toLocaleString('ar-SA-u-ca-gregory-nu-arab',{weekday:'long',day:'numeric',month:'long',hour:'numeric',minute:'2-digit'});
+function left(ms){ const m=Math.max(0,Math.round((ms-Date.now())/60000)); if(m>=1440) return AR(Math.floor(m/1440))+' يوم'; if(m>=60) return AR(Math.floor(m/60))+' س '+AR(m%60)+' د'; return AR(m)+' دقيقة'; }
+function unlock(s){
+  CURRENT=s; document.body.classList.remove('locked');
+  const sess=document.getElementById('sess'), al=document.getElementById('admLink');
+  al.hidden=!s.admin; sess.hidden=!!s.admin;
+  if(!s.admin) sess.textContent='⏳ ينتهي الدخول بعد '+left(s.exp);
+}
+function lock(msg){
+  try{ localStorage.removeItem(SKEY); }catch(e){}
+  CURRENT=null; closeAll(); document.body.classList.add('locked');
+  const g=document.getElementById('gateMsg'); g.className='gate-msg'; g.textContent=msg||'';
+  document.getElementById('gateIn').value='';
+}
+document.getElementById('gateForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const v=document.getElementById('gateIn').value, msg=document.getElementById('gateMsg'), btn=document.getElementById('gateBtn');
+  if(!v.trim()) return;
+  btn.disabled=true;
+  try{
+    if(await sha(v.trim())===ACC.adminHash){ const s={admin:true,exp:Date.now()+30*864e5}; setSess(s); unlock(s); location.hash='#admin'; return; }
+    const r=await checkCode(v);
+    if(!r){ msg.className='gate-msg'; msg.textContent='الرمز غير صحيح، تأكد منه وحاول مرة أخرى.'; return; }
+    if(r.exp<=Date.now()){ msg.className='gate-msg'; msg.textContent='انتهت صلاحية هذا الرمز. اطلب رمزاً جديداً من مدير المدرسة.'; return; }
+    const s={admin:false,exp:r.exp}; setSess(s); unlock(s);
+  } finally { btn.disabled=false; }
+});
+setInterval(()=>{ if(!CURRENT) return; if(CURRENT.exp<=Date.now()){ lock('انتهت مدة الدخول. اطلب رمزاً جديداً من مدير المدرسة.'); } else if(!CURRENT.admin){ document.getElementById('sess').textContent='⏳ ينتهي الدخول بعد '+left(CURRENT.exp); } },20000);
+
+/* admin panel */
+let admHours=2, LASTCODE=null;
+function histGet(){ try{ return JSON.parse(localStorage.getItem('mk48_codes')||'[]'); }catch(e){ return []; } }
+function histAdd(x){ try{ const h=histGet(); h.unshift(x); localStorage.setItem('mk48_codes',JSON.stringify(h.slice(0,50))); }catch(e){} }
+function renderAdmin(){
+  if(!CURRENT||!CURRENT.admin){ location.hash=''; return; }
+  const durs=[[1,'ساعة'],[2,'ساعتان'],[6,'٦ ساعات'],[24,'يوم'],[72,'٣ أيام'],[168,'أسبوع']];
+  const h=histGet();
+  view.innerHTML=`
+    <div class="vh"><div class="ic" style="background:var(--gold)"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3M15 8l2 2"/></svg></div><div><div class="lbl">خاص بمدير المدرسة</div><h2>رموز الدخول المؤقتة</h2><div class="meta">أنشئ رمزاً لكل مشرف، وبعد انتهاء مدته لا يستطيع الدخول إلا برمز جديد.</div></div>
+      <div class="acts"><a class="btn" href="#">رجوع</a><button class="btn" id="admOut">تسجيل خروج</button></div></div>
+    <div class="adm-grid">
+      <div class="adm-card"><h3>إنشاء رمز جديد</h3>
+        <label>اسم المشرف (اختياري)</label><input id="admName" placeholder="مثال: أ. خالد – مشرف التوجيه">
+        <label>مدة صلاحية الرمز</label>
+        <div class="durs">${durs.map(([v,l])=>`<button data-h="${v}" class="${v===admHours?'on':''}">${l}</button>`).join('')}</div>
+        <button class="btn pri" id="admGen" style="width:100%;justify-content:center">إنشاء الرمز</button>
+        <div class="code-out" id="codeOut"><div class="cd" id="cdV"></div><div class="ex" id="cdE"></div>
+          <div class="row"><button class="btn pri" id="cdWa">إرسال عبر واتساب</button><button class="btn" id="cdCp">نسخ الرسالة</button></div></div>
+      </div>
+      <div class="adm-card"><h3>الرموز التي أنشأتها</h3>
+        ${h.length?`<ul class="hist">${h.map(x=>`<li><b>${esc(x.code)}</b><span>${esc(x.name||'—')}</span><span class="st ${x.exp>Date.now()?'on':'off'}">${x.exp>Date.now()?'صالح حتى '+new Date(x.exp).toLocaleString('ar-SA-u-ca-gregory-nu-arab',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}):'منتهي'}</span></li>`).join('')}</ul>`:'<p class="todo" style="margin:0">لم تُنشئ أي رمز بعد. القائمة محفوظة في هذا الجهاز فقط.</p>'}
+      </div>
+    </div>`;
+  view.querySelectorAll('.durs button').forEach(b=>b.onclick=()=>{ admHours=+b.dataset.h; view.querySelectorAll('.durs button').forEach(x=>x.classList.toggle('on',x===b)); });
+  document.getElementById('admOut').onclick=()=>{ location.hash=''; lock('تم تسجيل الخروج.'); };
+  document.getElementById('admGen').onclick=async()=>{
+    const name=document.getElementById('admName').value.trim(); const {code,exp}=await makeCode(admHours);
+    histAdd({code,exp,name,at:Date.now()});
+    LASTCODE={code,exp,name}; renderAdmin(); document.getElementById('admName').value=name;
+    document.getElementById('cdV').textContent=code;
+    document.getElementById('cdE').textContent='صالح حتى: '+fmtDate(exp);
+    document.getElementById('codeOut').classList.add('on');
+    const link=location.origin+location.pathname;
+    const msg=`السلام عليكم ورحمة الله${name?' '+name:''}\nيسعدنا اطلاعكم على ملف شواهد متوسطة مكة المكرمة:\n${link}\n\nرمز الدخول: ${code}\nصالح حتى: ${fmtDate(exp)}`;
+    document.getElementById('cdWa').onclick=()=>{ window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank'); };
+    document.getElementById('cdCp').onclick=async e=>{ try{ await navigator.clipboard.writeText(msg); e.target.textContent='تم النسخ ✓'; }catch(err){ e.target.textContent='انسخ يدوياً'; } };
+  };
+}
+
+/* ===== intro video ===== */
+let INTRO=null;
+function ytId(u){ const m=String(u||'').match(/(?:youtu\.be\/|v=|shorts\/|embed\/)([\w-]{11})/); return m&&m[1]; }
+function introSrc(){
+  if(INTRO) return `https://drive.google.com/file/d/${encodeURIComponent(INTRO.id)}/preview`;
+  const y=ytId(SCHOOL.video); if(y) return `https://www.youtube-nocookie.com/embed/${y}?autoplay=1&rel=0`;
+  return null;
+}
+function renderIntro(){
+  const box=document.getElementById('intro'), v=document.getElementById('introV');
+  if(/\.(mp4|webm|mov)$/i.test(SCHOOL.video||'')){
+    box.hidden=false;
+    v.innerHTML=`<video src="${SCHOOL.video}" ${SCHOOL.videoPoster?`poster="${SCHOOL.videoPoster}"`:''} controls playsinline preload="metadata"></video>`;
+    const vid=v.querySelector('video');
+    vid.addEventListener('ended',()=>{ vid.load(); });   // يرجع لصورة البداية بعد انتهاء الفيديو
+    return;
+  }
+  const src=introSrc();
+  if(!src){ box.hidden=true; return; }
+  box.hidden=false;
+  v.innerHTML=`<button class="intro-play" id="introPlay"><div class="pattern"></div><div class="pb"><svg width="34" height="34" viewBox="0 0 24 24" fill="#fff"><path d="M8 5.5v13l11-6.5z"/></svg></div><span>تشغيل الفيديو</span></button>`;
+  document.getElementById('introPlay').onclick=()=>{ v.innerHTML=`<iframe src="${src}" allow="autoplay; fullscreen; encrypted-media" allowfullscreen title="فيديو تعريفي بالمدرسة"></iframe>`; };
+}
+
+/* ===== progress ===== */
+function progOf(s){
+  const named=s.groups.filter(g=>g.name);
+  const parts = named.length ? named : [{name:'',files:s.groups.flatMap(g=>g.files)}];
+  const done=parts.filter(g=>g.files.length>0);
+  return {pct: Math.round(done.length/parts.length*100), done:done.length, total:parts.length, missing: parts.filter(g=>!g.files.length).map(g=>g.name).filter(Boolean)};
+}
+const pColor = p => p>=80 ? '#13805f' : p>=40 ? '#c99a2e' : p>0 ? '#d9822b' : '#d8d4c8';
+function overall(){ const ps=DATA.map(progOf); return Math.round(ps.reduce((a,p)=>a+p.pct,0)/ps.length); }
+function renderRing(){
+  const o=overall();
+  document.getElementById('ringC').setAttribute('stroke-dasharray', o+' 100');
+  document.getElementById('ringC').setAttribute('stroke', pColor(o));
+  document.getElementById('ringT').textContent=AR(o)+'٪';
+  const done=DATA.filter(s=>progOf(s).pct===100).length;
+  document.getElementById('progLine').textContent=`${AR(done)} من ${AR(DATA.length)} محاور مكتملة`;
+}
+function renderProgress(){
+  const o=overall(), ps=DATA.map(s=>({s,p:progOf(s)}));
+  const full=ps.filter(x=>x.p.pct===100).length, part=ps.filter(x=>x.p.pct>0&&x.p.pct<100).length, none=ps.filter(x=>x.p.pct===0).length;
+  view.innerHTML = `
+    <div class="vh"><div class="ic">${ic(4,32)}</div><div><div class="lbl">لوحة المتابعة</div><h2>متابعة الإنجاز</h2><div class="meta">تُحسب النسبة من عدد الأقسام الفرعية التي رُفع فيها شاهد واحد على الأقل.</div></div>
+      <div class="acts"><a class="btn" href="#"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>رجوع</a></div></div>
+    <div class="ov"><div class="ring"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.5" fill="none" stroke="#efede6" stroke-width="4"/><circle cx="18" cy="18" r="15.5" fill="none" stroke="${pColor(o)}" stroke-width="4" stroke-linecap="round" stroke-dasharray="${o} 100" pathLength="100" transform="rotate(-90 18 18)"/></svg><b>${AR(o)}٪</b></div>
+      <div><h2>الجاهزية العامة للملف</h2><p>${AR(full)} محاور مكتملة • ${AR(part)} قيد الإنجاز • ${AR(none)} لم تبدأ</p>
+      <div class="legend"><span><i style="background:#13805f"></i>مكتمل تقريباً (٨٠٪+)</span><span><i style="background:#c99a2e"></i>متوسط</span><span><i style="background:#d9822b"></i>بداية</span><span><i style="background:#d8d4c8"></i>لم يبدأ</span></div></div></div>
+    ${ps.map(({s,p})=>`<a class="prow" href="#s${s.n}"><div class="pn">${ic(ICONS[s.n]?s.n:'live',22)}</div>
+      <div><h4>${AR(s.n)}. ${esc(s.title)}</h4><div class="bar"><i style="width:${Math.max(p.pct,2)}%;background:${pColor(p.pct)}"></i></div>
+      ${p.missing.length?`<div class="miss"><b>ينقص:</b> ${p.missing.map(esc).join('، ')}</div>`:''}</div>
+      <div class="pv" style="color:${pColor(p.pct)==='#d8d4c8'?'#98a19c':pColor(p.pct)}">${AR(p.pct)}٪<small>${AR(p.done)} من ${AR(p.total)} أقسام</small></div></a>`).join('')}`;
+}
+/* ===== about ===== */
+function renderAbout(){
+  const S=SCHOOL, k=(v,l)=>v?`<div class="kpi"><b>${esc(String(v))}</b><span>${l}</span></div>`:'';
+  const files=DATA.reduce((a,s)=>a+count(s),0);
+  const contacts=[
+    S.phone && `<a href="tel:${esc(S.phone)}">📞 <bdi dir="ltr">${esc(S.phone)}</bdi></a>`,
+    S.whatsapp && `<a href="https://wa.me/${esc(S.whatsapp)}" target="_blank" rel="noopener">💬 واتساب</a>`,
+    S.email && `<a href="mailto:${esc(S.email)}">✉️ <bdi dir="ltr">${esc(S.email)}</bdi></a>`,
+    S.x && `<a href="https://x.com/${esc(S.x.replace(/^@/,''))}" target="_blank" rel="noopener">𝕏 @${esc(S.x.replace(/^@/,''))}</a>`,
+    S.map && `<a href="${esc(S.map)}" target="_blank" rel="noopener">📍 الموقع على الخريطة</a>`,
+    S.district && !S.map && `<span>📍 ${esc(S.district)}</span>`
+  ].filter(Boolean).join('');
+  view.innerHTML = `
+    <div class="vh"><div class="ic" style="background:var(--gold)">${'<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/></svg>'}</div><div><div class="lbl">تعريف</div><h2>عن المدرسة</h2><div class="meta">${esc(S.stage||'')}${S.district?' • '+esc(S.district):''}</div></div>
+      <div class="acts"><a class="btn" href="#"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>رجوع</a></div></div>
+    <div class="about-hero"><div class="pattern"></div><div style="position:relative"><h2>متوسطة مكة المكرمة</h2><p>الإدارة العامة للتعليم بمحافظة جدة • تعليم عام – دمج فكري</p>${S.principal?`<p style="margin-top:10px;color:#f3dfae">قائد المدرسة: <b style="color:#fff">${esc(S.principal)}</b></p>`:''}</div></div>
+    <div class="kpis">${k(S.students?'+'+S.students:'','طالباً')}${k(S.teachers,'معلماً')}${k(S.classes,'فصلاً')}${k(AR(files),'شاهداً موثّقاً')}</div>
+    <div class="vm">
+      <div class="grp"><h4>رؤيتنا</h4>${S.vision?`<p>${esc(S.vision)}</p>`:'<p class="todo">تُضاف لاحقاً</p>'}</div>
+      <div class="grp"><h4>رسالتنا</h4>${S.mission?`<p>${esc(S.mission)}</p>`:'<p class="todo">تُضاف لاحقاً</p>'}</div>
+    </div>
+    <div class="grp"><p class="grp-t">التواصل</p>${contacts?`<div class="contact">${contacts}</div>`:'<p class="todo" style="margin:0">تُضاف لاحقاً</p>'}${S.hours?`<p class="todo" style="margin:10px 0 0">أوقات التواصل: ${esc(S.hours)}</p>`:''}</div>`;
+}
+function applySchool(){
+  const w=document.getElementById('stStuW'); if(SCHOOL.students) document.getElementById('stStu').textContent='+'+SCHOOL.students; else w.remove();
+  if(SCHOOL.logo){ const L=document.getElementById('logo'), old=L.innerHTML; const im=new Image(); im.alt='شعار وزارة التعليم'; im.onload=()=>{ L.innerHTML=''; L.classList.add('has-logo'); L.appendChild(im); }; im.src=SCHOOL.logo; }
+}
+
+/* tab bar */
+function syncTabs(){ const h=location.hash.slice(1); const key= h==='progress'?'progress': h==='about'?'about': 'home';
+  document.querySelectorAll('#tabbar a').forEach(a=>a.classList.toggle('on',a.dataset.tab===key)); }
+document.querySelector('#tabbar [data-tab="search"]').addEventListener('click',e=>{ e.preventDefault();
+  if(location.hash){ history.pushState('', '', location.pathname); route(); }
+  setTimeout(()=>{ const s=document.getElementById('q'); s.scrollIntoView({behavior:'smooth',block:'center'}); s.focus(); },60); });
+
+
+/* routing */
+function route(){
+  const h = location.hash.slice(1);
+  closeAll();
+  if(h==='live'){ document.body.classList.add('in-sec'); renderLive(); }
+  else if(h==='progress'){ document.body.classList.add('in-sec'); renderProgress(); }
+  else if(h==='admin'){ document.body.classList.add('in-sec'); renderAdmin(); }
+  else if(h==='about'){ document.body.classList.add('in-sec'); renderAbout(); }
+  else if(/^s\d+$/.test(h) && DATA.some(s=>s.n===+h.slice(1))){ kind='all'; document.body.classList.add('in-sec'); renderSec(+h.slice(1)); }
+  else { document.body.classList.remove('in-sec'); view.innerHTML=''; }
+  window.scrollTo(0,0);
+  syncTabs();
+}
+addEventListener('hashchange', route);
+
+/* clicks */
+document.addEventListener('click', e=>{
+  const ad = e.target.closest('[data-add]'); if(ad){ openUp(+ad.dataset.add); return; }
+  if(e.target.closest('#poster')){ openViewer({k:'img',src:'files/poster.jpg',t:'متوسطة مكة المكرمة بجدة',view:'',drive:''}); return; }
+  const dl = e.target.closest('[data-del]'); if(dl){ openDel(dl.dataset.del, dl.dataset.t); return; }
+  const vw = e.target.closest('[data-view]'); if(vw){ openViewer(vw.dataset); return; }
+  const ch = e.target.closest('.chip'); if(ch){ kind=ch.dataset.k; renderSec(+location.hash.slice(2)); return; }
+  const hm = e.target.closest('a[href="#"]'); if(hm){ e.preventDefault(); history.pushState('', '', location.pathname); route(); }
+});
+
+const modal=document.getElementById('modal'), viewer=document.getElementById('viewer'), delModal=document.getElementById('delModal');
+function openDel(href,title){ document.getElementById('dT').textContent=title; document.getElementById('dGo').href=href; delModal.classList.add('on'); }
+function openUp(n){ const s=DATA.find(x=>x.n===n); document.getElementById('mSub').textContent='المحور '+AR(s.n)+': '+s.title; document.getElementById('mFolder').textContent='«'+AR(s.n)+'- '+s.title+'»';
+  const fid=FOLDER_OF[n];
+  document.getElementById('mGo').href='https://drive.google.com/drive/folders/'+(fid||FID);
+  document.getElementById('mStep1').textContent = fid ? 'اضغط الزر بالأسفل ليفتح مجلد هذا المحور في Google Drive.' : 'اضغط الزر بالأسفل ليفتح مجلد المدرسة في Google Drive.';
+  document.getElementById('mIn').style.display = fid ? 'none' : '';
+  document.getElementById('mNote').textContent = LIVE ? 'بعد الرفع يظهر الشاهد هنا تلقائياً لجميع الزوار (حدّث الصفحة).' : 'يظهر الشاهد مباشرة في أيقونة «المجلد المباشر» في الصفحة الرئيسية.';
+  modal.classList.add('on'); }
+function openViewer(d){
+  const body=document.getElementById('vBody'), [lab]=KINDS[d.k]||KINDS.oth;
+  document.getElementById('vT').textContent=d.t; document.getElementById('vK').textContent=lab;
+  document.getElementById('vOpen').href=d.src;
+  const vd=document.getElementById('vDel'); vd.hidden=!(d.drive && CURRENT && CURRENT.admin); vd.onclick=()=>openDel(d.src,d.t);
+  let html;
+  if(d.drive) html=`<span class="vload">جارٍ فتح الشاهد…</span><iframe src="https://drive.google.com/file/d/${encodeURIComponent(d.view)}/preview" allow="autoplay; fullscreen" allowfullscreen title="${esc(d.t)}"></iframe>`;
+  else if(d.k==='img') html=`<img src="${d.src}" alt="${esc(d.t)}">`;
+  else if(d.k==='vid') html=`<video src="${d.src}" controls autoplay playsinline></video>`;
+  else html=`<span class="vload">جارٍ فتح الشاهد…</span><iframe src="${d.src}" title="${esc(d.t)}"></iframe>`;
+  body.innerHTML=html; viewer.classList.add('on'); document.body.style.overflow='hidden';
+}
+function closeAll(){ modal.classList.remove('on'); delModal.classList.remove('on'); if(viewer.classList.contains('on')){ viewer.classList.remove('on'); document.getElementById('vBody').innerHTML=''; document.body.style.overflow=''; } }
+document.getElementById('mClose').onclick=closeAll; document.getElementById('dClose').onclick=()=>delModal.classList.remove('on'); document.getElementById('vX').onclick=closeAll;
+[modal,viewer].forEach(m=>m.addEventListener('click',e=>{ if(e.target===m) closeAll(); }));
+delModal.addEventListener('click',e=>{ if(e.target===delModal) delModal.classList.remove('on'); });
+addEventListener('keydown',e=>{ if(e.key!=='Escape') return; if(delModal.classList.contains('on')) delModal.classList.remove('on'); else closeAll(); });
+
+/* ===== Google Drive live data ===== */
+const FOLDER='application/vnd.google-apps.folder';
+const ARD='٠١٢٣٤٥٦٧٨٩';
+function splitNum(name){ const m=name.match(/^\s*([٠-٩0-9]+)\s*[-–.]\s*(.*)$/); if(!m) return [null,name.trim()]; return [parseInt(m[1].replace(/[٠-٩]/g,c=>ARD.indexOf(c))), m[2].trim()]; }
+function cleanName(n){ return n.replace(/\.[a-z0-9]{2,5}$/i,'').replace(/[\ufffd\u200f\u200e]/g,'').replace(/_+/g,' ').replace(/^\s*-\s*(\S+)\s*-\s*/,'$1 – ').replace(/\s+/g,' ').trim(); }
+function kindOf(m,n){ if(/pdf/.test(m)) return 'pdf'; if(/^image\//.test(m)) return 'img'; if(/word|document/.test(m)) return 'doc'; if(/sheet|excel/.test(m)) return 'xls'; if(/presentation|powerpoint/.test(m)) return 'ppt'; if(/^video\//.test(m)) return 'vid'; return 'oth'; }
+async function listChildren(id){
+  let out=[], tok='';
+  do{
+    const u=new URL('https://www.googleapis.com/drive/v3/files');
+    u.searchParams.set('q',`'${id}' in parents and trashed=false`);
+    u.searchParams.set('fields','nextPageToken,files(id,name,mimeType,size,modifiedTime,webViewLink)');
+    u.searchParams.set('pageSize','1000'); u.searchParams.set('key',API_KEY);
+    if(tok) u.searchParams.set('pageToken',tok);
+    const r=await fetch(u); if(!r.ok) throw new Error('drive '+r.status);
+    const j=await r.json(); out.push(...(j.files||[])); tok=j.nextPageToken;
+  }while(tok);
+  return out;
+}
+async function walk(id,path,order){
+  const items=await listChildren(id);
+  const files=items.filter(x=>x.mimeType!==FOLDER && x.mimeType!=='application/vnd.google-apps.shortcut')
+    .map(x=>({t:cleanName(x.name),f:x.webViewLink,id:x.id,k:kindOf(x.mimeType,x.name),s:+x.size||0,d:x.modifiedTime,drive:true}))
+    .sort((a,b)=>a.t.localeCompare(b.t,'ar'));
+  const subs=items.filter(x=>x.mimeType===FOLDER);
+  const nested=await Promise.all(subs.map(f=>{ const [n,t]=splitNum(f.name); return walk(f.id,[...path,t], path.length?order:(n??99)); }));
+  return [{name:path.join(' › '),order,files,hasKids:subs.length>0},...nested.flat()];
+}
+async function loadDrive(){
+  if(!API_KEY || API_KEY.startsWith('__')) return;
+  const ld=document.getElementById('loading'); ld.hidden=false;
+  try{
+    const rootItems=await listChildren(FID); const top=rootItems.filter(x=>x.mimeType===FOLDER);
+    const vids=rootItems.filter(x=>/^video\//.test(x.mimeType)); INTRO = vids.find(x=>/تعريف/.test(x.name)) || vids[0] || null; renderIntro();
+    const secs=await Promise.all(top.map(async f=>{
+      const [n,title]=splitNum(f.name); FOLDER_OF[n]=f.id;
+      let groups=await walk(f.id,[],0);
+      groups=groups.filter(g=>g.files.length || !g.hasKids);
+      if(groups.length>1) groups=groups.filter(g=>g.name!=='' || g.files.length);
+      groups.sort((a,b)=>(a.name!=='')-(b.name!=='') || a.order-b.order || a.name.localeCompare(b.name,'ar'));
+      return {n:n??99,title,groups};
+    }));
+    secs.sort((a,b)=>a.n-b.n);
+    if(secs.length){ DATA=secs; LIVE=true; renderGrid(); const h=location.hash.slice(1); if(/^s\d+$/.test(h) && DATA.some(s=>s.n===+h.slice(1))) renderSec(+h.slice(1)); else if(h==='live'){ history.replaceState('', '', location.pathname); route(); } else if(h==='progress') renderProgress(); else if(h==='about') renderAbout(); if(q.value) doSearch(); }
+  }catch(err){ console.warn('Drive load failed, using saved copy', err); }
+  finally{ ld.hidden=true; }
+}
+
+(function(){ const s=getSess(); if(s) unlock(s); })();
+applySchool();
+renderIntro();
+renderGrid();
+route();
+loadDrive();
+</script>
+</body>
+</html>

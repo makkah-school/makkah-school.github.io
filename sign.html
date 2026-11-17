@@ -11,6 +11,7 @@
 html,body{background:var(--bg);color:var(--txt);font-family:Tajawal,system-ui,sans-serif;direction:rtl}
 button,input,textarea,select{font-family:inherit;font-size:1rem}
 .hdr{background:linear-gradient(100deg,#5bb58a,#3f9a8f 40%,#2f7fa0 75%,#3a6f9c);color:#fff;padding:18px 16px 34px;border-radius:0 0 22px 22px;position:relative}
+.hdr .back{display:block;max-width:980px;margin:-6px auto 8px;color:#fff;font-weight:700;text-decoration:none;opacity:.85;font-size:.85rem;text-align:left}
 .hdr .row{display:flex;align-items:center;gap:12px;justify-content:center;max-width:980px;margin:auto}
 .hdr img{height:44px}.hdr .sep{width:2px;height:40px;background:rgba(255,255,255,.85)}
 .hdr h1{font-size:1.05rem;font-weight:500}
@@ -189,7 +190,9 @@ const CIRC_CONFIG = {
   DEFAULT_PIN: '1448',         // رمز الدخول الأول للوحة الإدارة (غيّره من الإعدادات بعد أول دخول)
   SCHOOL: 'متوسطة مكة المكرمة',
   PRINCIPAL_NAME: 'إبراهيم علي آل صمع',
-  PRINCIPAL_PHONE: ''          // جوال المدير، ويمكن تعديله من الإعدادات
+  PRINCIPAL_PHONE: '',         // جوال المدير، ويمكن تعديله من الإعدادات
+  // كلمة مرور المدير في ملف الشواهد (مشفّرة) — تفتح لوحة الإدارة أيضاً
+  EVIDENCE_ADMIN_HASH: '398dc46ba4b05fb9b99d80c49af7cc065c504fb08ca21d0862797beadab2b9b4'
 };
 
 /* ---------- قائمة المنسوبين الافتراضية (من كشف الاطلاع) ---------- */
@@ -275,10 +278,39 @@ const Circ = (() => {
     if (s && !Array.isArray(s)) throw new Error('ملف المنسوبين تالف');
     if (!s){
       s = CIRC_DEFAULT_STAFF.map((name) => ({ id: uid(6), name, phone: '', token: uid(12) }));
+      ensureUsers(s);
       await saveStaff(s);
-    }
+    } else if (ensureUsers(s)) await putJSON('staff.json', s);
     return s;
   }
+  // اسم مستخدم رقمي (4 أرقام) لكل منسوب
+  function ensureUsers(list){
+    let changed = false, next = 1001;
+    const used = new Set(list.map(t => t.user).filter(Boolean));
+    list.forEach(t => { if (!t.user){ while (used.has(String(next))) next++; t.user = String(next); used.add(t.user); changed = true; } });
+    return changed;
+  }
+
+  /* ---------- كلمات المرور (PBKDF2) ---------- */
+  async function pwHash(pw, salt){
+    const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveBits']);
+    const bits = await crypto.subtle.deriveBits({ name:'PBKDF2', salt: new TextEncoder().encode(salt), iterations: 150000, hash:'SHA-256' }, key, 256);
+    return Array.from(new Uint8Array(bits), x => x.toString(16).padStart(2, '0')).join('');
+  }
+  async function makePw(pw){ const salt = uid(16); return { salt, hash: await pwHash(pw, salt), at: new Date().toISOString() }; }
+  async function checkPw(rec, pw){ return !!(rec && rec.salt && (await pwHash(pw, rec.salt)) === rec.hash); }
+  const randPw = () => { const a = new Uint32Array(1); crypto.getRandomValues(a); return String(100000 + a[0] % 900000); };
+  function findStaff(list, login){
+    const v = String(login || '').trim().replace(/[٠-٩]/g, c => '٠١٢٣٤٥٦٧٨٩'.indexOf(c));
+    const p = phone(v);
+    return list.find(t => t.user === v) || (p.length >= 9 ? list.find(t => t.phone && phone(t.phone) === p) : null);
+  }
+
+  /* ---------- الجلسات ---------- */
+  const SESS = 'mk_school_session';
+  function session(){ try { const s = JSON.parse(localStorage.getItem(SESS) || 'null'); if (s && s.exp > Date.now()) return s; } catch(e){} return null; }
+  function setSession(s){ try { localStorage.setItem(SESS, JSON.stringify(s)); } catch(e){} }
+  function logout(){ try { localStorage.removeItem(SESS); } catch(e){} }
   async function saveStaff(list){
     await putJSON('staff.json', list);
     await Promise.all(list.map(t => putJSON(`keys/${t.token}.json`, { id: t.id, name: t.name })));
@@ -290,12 +322,12 @@ const Circ = (() => {
     const out = [];
     for (let i = 0; i < ids.length; i += 12){
       const part = await Promise.all(ids.slice(i, i + 12).map(id => getJSON(`c/${cid}/sig/${id}.json`).catch(() => null)));
-      part.forEach(r => r && out.push(r));
+      part.forEach(r => r && !r.revoked && out.push(r));
     }
     return out;
   }
 
-  return { DEMO, C, getJSON, putJSON, putFile, getFileBlob, list, uid, sha, hijri, timeStr, esc, phone, wa, pageURL, settings, staff, saveStaff, circulars, signatures };
+  return { DEMO, C, pwHash, makePw, checkPw, randPw, findStaff, session, setSession, logout, ensureUsers, getJSON, putJSON, putFile, getFileBlob, list, uid, sha, hijri, timeStr, esc, phone, wa, pageURL, settings, staff, saveStaff, circulars, signatures };
 })();
 
 /* ---------- عرض ملف PDF (يعتمد pdf.js إن توفر) ---------- */
@@ -339,10 +371,11 @@ function fail(m){ $('loading').classList.add('hide'); $('err').classList.remove(
     if (!CID || !KEY) return fail();
     [ME, META, SET] = await Promise.all([Circ.getJSON(`keys/${KEY}.json`), Circ.getJSON(`c/${CID}/meta.json`), Circ.settings()]);
     if (!ME || !META) return fail();
+    if (META.deleted) return fail('تم إلغاء هذا التعميم من قِبل إدارة المدرسة.');
     $('school').textContent = SET.school;
     const sig = await Circ.getJSON(`c/${CID}/sig/${ME.id}.json`);
     $('loading').classList.add('hide');
-    if (sig) return showDone(sig, !!VIEW);
+    if (sig && !sig.revoked) return showDone(sig, !!VIEW);
     if (VIEW) return fail('لم يوقّع المنسوب على هذا التعميم بعد.');
     $('vSign').classList.remove('hide');
     $('tName').textContent = ME.name;
