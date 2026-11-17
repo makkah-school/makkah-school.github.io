@@ -513,8 +513,8 @@ function pfReadiness(pf, title, model){
 if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 const $ = id => document.getElementById(id);
 const qs = new URLSearchParams(location.search);
-const CID = qs.get('c'), KEY = qs.get('k'), VIEW = qs.get('v');
-let ME, META, SET, blobCache;
+const CID = qs.get('c'), KEY = (k => k && k !== 'null' && k !== 'undefined' ? k : null)(qs.get('k')), VIEW = qs.get('v');
+let ME, META, SET, blobCache, TOKEN = KEY;
 
 function toast(m){ const t = $('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2600); }
 function fail(m){ $('loading').classList.add('hide'); $('err').classList.remove('hide'); if (m) $('errMsg').textContent = m; }
@@ -526,10 +526,13 @@ function fail(m){ $('loading').classList.add('hide'); $('err').classList.remove(
       const s = Circ.session('teacher');
       if (!s){ location.replace('teacher.html?next=' + encodeURIComponent('sign.html?c=' + CID + (VIEW ? '&v=1' : ''))); return; }
       const st = (await Circ.staff()).find(t => t.id === s.id);
-      ME = st ? { id: st.id, name: st.name } : null;
+      ME = st ? { id: st.id, name: st.name } : null; TOKEN = st && st.token;
       [META, SET] = await Promise.all([Circ.getJSON(`c/${CID}/meta.json`), Circ.settings()]);
     } else
-    [ME, META, SET] = await Promise.all([Circ.getJSON(`keys/${KEY}.json`), Circ.getJSON(`c/${CID}/meta.json`), Circ.settings()]);
+    {
+      [ME, META, SET] = await Promise.all([Circ.getJSON(`keys/${KEY}.json`), Circ.getJSON(`c/${CID}/meta.json`), Circ.settings()]);
+      if (!ME){ const st = (await Circ.staff()).find(t => t.token === KEY); if (st) ME = { id: st.id, name: st.name }; }   // احتياط إذا لم يُنشأ ملف المفتاح
+    }
     if (!ME || !META) return fail();
     if (META.deleted) return fail('تم إلغاء هذا التعميم من قِبل إدارة المدرسة.');
     $('school').textContent = SET.school;
@@ -589,7 +592,7 @@ function showDone(r, viewOnly){
   $('rSchool').textContent = SET.school; $('rName').textContent = r.name; $('rTitle').textContent = META.title;
   $('rNum').textContent = `رقم ${META.number || '—'} · ${META.date}`; $('rDate').textContent = `${r.hijri} — الساعة ${r.time}`;
   $('rSig').src = r.signature; $('rCode').textContent = r.code || '—';
-  const link = Circ.pageURL('sign.html', { c: CID, k: KEY, v: 1 });
+  const link = TOKEN ? Circ.pageURL('sign.html', { c: CID, k: TOKEN, v: 1 }) : Circ.pageURL('sign.html', { c: CID, v: 1 });
   const txt = `سعادة مدير المدرسة أ. ${SET.principalName}\nالسلام عليكم ورحمة الله وبركاته\n\nأفيدكم باطلاعي على التعميم رقم (${META.number || '—'}) بتاريخ ${META.date}\nبشأن: ${META.title}\nوتوقيعي عليه إلكترونياً بتاريخ ${r.hijri} الساعة ${r.time}.\n\nنسخة الإقرار الموقّع:\n${link}\n\n${r.name}`;
   $('toPrincipal').href = Circ.wa(SET.principalPhone, txt);
   // نسخة الطباعة
