@@ -623,6 +623,16 @@ function pfReadiness(pf, title, model){
            missing: items.map((it, i) => cnt[i] ? null : it[0]).filter(Boolean) };
 }
 
+/* ---------- ملاحظات المدير على كشف الاطلاع (c/{id}/notes.json) ----------
+   { staffId: { t:'النص', k:'' | 'paper' (اطّلع ورقياً = يُحتسب) | 'ex' (مستثنى من المطالبة) } } */
+const CIRC_NOTE_PRESETS = [ { t:'إجازة', k:'ex', i:'🌴' }, { t:'اطّلع ورقياً', k:'paper', i:'📄' }, { t:'مكلّف خارجياً', k:'ex', i:'🚗' }, { t:'منقول', k:'ex', i:'↗️' } ];
+function circStatus(sig, note){
+  if (sig) return { s:'ok', l:'✓ تم الاطلاع' };
+  if (note && note.k === 'paper') return { s:'ok', l:'✓ ورقياً' };
+  if (note && note.k === 'ex') return { s:'ex', l:'مستثنى' };
+  return { s:'no', l:'لم يوقّع' };
+}
+
 </script>
 <script>
 const $ = id => document.getElementById(id);
