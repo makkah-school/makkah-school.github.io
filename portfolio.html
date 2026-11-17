@@ -191,6 +191,16 @@ body{background:#eef3f2}
 .imp{background:#f3effa;border:1.5px dashed #6b4c9a;border-radius:16px;padding:14px;margin-top:14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 .imp b{color:#4a3470}.imp p{font-size:.82rem;color:#5c5470;margin:2px 0 0;flex-basis:100%}
 .pp h3.axs{font-size:12.5pt;color:#1f3d55;margin:4mm 10mm 2.5mm;border-bottom:.5mm solid #cfdcd6;padding-bottom:1.5mm}
+.ax .wt{font-size:.72rem;font-weight:800;background:#fdf3d7;color:#8a6116;border-radius:10px;padding:1px 8px;margin-inline-start:6px;white-space:nowrap}
+.ax .mb{height:5px;background:#e6eeec;border-radius:5px;margin-top:6px;overflow:hidden}.ax .mb i{display:block;height:100%;background:#3a9a7e}
+.ax.done{border-color:#bfe3d4;background:linear-gradient(180deg,#fff,#f6fbf9)}
+.ax .ck{color:#2c7a64;font-weight:900}
+.prog .rd{font-size:1.6rem;font-weight:900;color:#2c7a64;line-height:1}.prog .rd small{display:block;font-size:.7rem;color:var(--mut);font-weight:600}
+.mnote{background:#f7f3e6;border-inline-start:4px solid #e9c46a;border-radius:10px;padding:8px 12px;font-size:.8rem;color:#6b5a1f;margin-bottom:12px}
+.pp table.ix{width:calc(100% - 20mm);margin:0 10mm;border-collapse:collapse;font-size:10.5pt}
+.pp table.ix th{background:#1f3d55;color:#fff;padding:2mm 3mm;text-align:right}.pp table.ix td{border-bottom:.3mm solid #cfdcd6;padding:2mm 3mm}
+.pp table.ix tr.no td{color:#a63d36}.pp .rdy{margin:4mm 10mm;font-size:12pt;font-weight:800;color:#2c7a64}
+.pp .axpg{page-break-before:always}
 /* الطباعة */
 .pp{font-family:Tajawal,sans-serif;color:#26313d}
 .pp .cover-pg{page-break-after:always;text-align:center}
@@ -422,22 +432,130 @@ async function circRenderPDF(blob, host){
   }
   window.circGoBack = goBack;
   function wire(){
-    document.querySelectorAll('a.home-link[href="index.html"]:not([data-nb])').forEach(a => {
+    [...document.querySelectorAll('a[href="index.html"]:not([data-nb])')].filter(a => a.classList.contains('home-link') || /العودة للبوابة/.test(a.textContent)).forEach(a => {
       a.setAttribute('data-nb', '1');
       a.innerHTML = '🏠 البوابة الرئيسية';
       const b = document.createElement('a');
-      b.href = '#'; b.className = a.className.replace(/\bback\b/, '').trim(); b.setAttribute('data-nb', '1');
+      b.href = '#'; b.className = a.className.replace(/\bback\b/, '').trim(); b.setAttribute('data-nb', '1'); if (a.getAttribute('style')) b.setAttribute('style', a.getAttribute('style'));
       b.innerHTML = '→ الصفحة السابقة';
       b.onclick = e => { e.preventDefault(); goBack(); };
       const w = document.createElement(a.classList.contains('back') ? 'div' : 'span');
       w.className = 'nav-pair' + (a.classList.contains('back') ? ' back' : '');
       a.classList.remove('back');
       a.parentNode.insertBefore(w, a); w.appendChild(b); w.appendChild(a);
+      if (!a.classList.contains('home-link')){ w.style.cssText = 'display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap'; a.style.borderInlineStart = '1.5px solid currentColor'; a.style.paddingInlineStart = '10px'; }
     });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wire); else wire();
   new MutationObserver(wire).observe(document.documentElement, { childList:true, subtree:true });
 })();
+
+/* =====================================================================
+   نماذج تقييم الأداء الوظيفي (الدليل الإرشادي لإدارة الأداء الوظيفي
+   لشاغلي الوظائف التعليمية — وزارة التعليم). البند: [العنوان، الوزن٪ أو null، الشواهد المقترحة]
+   ===================================================================== */
+const PF_MODELS = (function(){
+  const S = { // البنود المشتركة وبنود المعلم (الترتيب ثابت — لا يُغيَّر)
+    duty:'أداء الواجبات الوظيفية', comm:'التفاعل مع المجتمع المهني', par:'التفاعل مع أولياء الأمور', strat:'التنويع في استراتيجيات التدريس',
+    out:'تحسين نتائج المتعلمين', plan:'إعداد وتنفيذ خطة التعلم', tech:'توظيف تقنيات ووسائل التعلم المناسبة', env:'تهيئة البيئة التعليمية',
+    cls:'الإدارة الصفية', ana:'تحليل نتائج المتعلمين وتشخيص مستوياتهم', asm:'تنوع أساليب التقويم'
+  };
+  const G = {
+    duty:['التقيّد بالدوام الرسمي', 'تأدية الحصص وفق الجدول', 'المناوبة والإشراف', 'التحضير وإعداد الدروس'],
+    comm:['مجتمعات التعلم المهنية', 'تبادل الزيارات', 'الدروس التطبيقية', 'حضور الدورات وورش العمل'],
+    par:['التواصل مع أولياء الأمور', 'تقارير مستوى الطلاب', 'اجتماع أولياء الأمور', 'الخطة الأسبوعية لولي الأمر'],
+    strat:['استراتيجيات التعلم النشط', 'التعلم التعاوني', 'صور تطبيق الاستراتيجيات', 'خرائط ذهنية'],
+    out:['الخطط العلاجية', 'برامج الإثراء', 'تكريم المتفوقين', 'مقارنة النتائج'],
+    plan:['توزيع المنهج', 'التحضير', 'الخطة الأسبوعية', 'الواجبات والأنشطة'],
+    tech:['منصة مدرستي', 'العروض التقديمية', 'الوسائل التعليمية', 'الاختبارات الإلكترونية'],
+    env:['مراعاة الفروق الفردية', 'التحفيز والتعزيز', 'قواعد الصف', 'الأنشطة الصفية'],
+    cls:['ضبط سلوك الطلاب', 'إدارة الوقت', 'سجل المتابعة', 'جذب الانتباه'],
+    ana:['الاختبار التشخيصي', 'تحليل النتائج', 'تصنيف الطلاب', 'الرسوم البيانية للنتائج'],
+    asm:['اختبارات ورقية وإلكترونية', 'المشاريع والبحوث', 'ملفات أعمال الطلاب', 'التقويم الذاتي والأقران']
+  };
+  const T = (w) => Object.keys(S).map(k => [S[k], w[k], G[k]]);
+  return {
+    teacher:{ name:'نموذج المعلم', official:true,
+      items: T({ duty:10, comm:10, par:10, strat:10, out:10, plan:10, tech:10, env:5, cls:5, ana:10, asm:10 }) },
+    activity:{ name:'نموذج المعلم المكلّف بالنشاط الطلابي', official:true,
+      items: T({ duty:10, comm:10, par:5, strat:5, out:5, plan:10, tech:5, env:5, cls:5, ana:5, asm:5 }).concat([
+        ['إعداد خطة برامج النشاط وتنفيذها', 10, ['الخطة السنوية للنشاط', 'تقارير البرامج', 'الجدول الزمني']],
+        ['تهيئة البيئة المدرسية للأنشطة', 5, ['تجهيز أماكن النشاط', 'الأندية الطلابية', 'صور البيئة']],
+        ['دعم المتعلمين', 5, ['اكتشاف المواهب', 'المسابقات', 'المشاركات الخارجية']],
+        ['تحفيز المتعلمين', 10, ['شهادات التكريم', 'لوحات الشرف', 'الحوافز']]]) },
+    health:{ name:'نموذج المعلم المكلّف بالتوجيه الصحي', official:true,
+      items: T({ duty:10, comm:10, par:5, strat:5, out:5, plan:10, tech:5, env:5, cls:5, ana:5, asm:5 }).concat([
+        ['تنفيذ البرنامج الصحي المدرسي المشترك', 15, ['خطة البرنامج الصحي', 'الحملات التوعوية', 'التقارير']],
+        ['حصر الحالات الصحية للمتعلمين', 5, ['سجل الحالات الصحية', 'التواصل مع الأسر', 'الإحالات']],
+        ['البيئة الصحية المدرسية', 10, ['متابعة المقصف', 'النظافة والسلامة', 'الإسعافات الأولية']]]) },
+    counselor:{ name:'نموذج الموجه الطلابي', official:true, note:'أوزان هذا النموذج غير واضحة في نسخة الدليل المتاحة، لذلك تُعرض البنود بدون نسب.',
+      items: [
+        ['أداء الواجبات الوظيفية', null, ['سجل الدوام', 'الخطة الفصلية', 'السجلات الإرشادية']],
+        ['التدخلات المتعلقة بالانضباط', null, ['متابعة الغياب والتأخر', 'دراسة الحالات', 'العقود السلوكية']],
+        ['برامج التحفيز', null, ['تكريم المنضبطين', 'المسابقات', 'لوحات التميز']],
+        ['دعم التخطيط', null, ['الخطة الإرشادية', 'لجنة التوجيه', 'محاضر الاجتماعات']],
+        ['تعزيز القيم', null, ['البرامج القيمية', 'الإذاعة المدرسية', 'المبادرات']],
+        ['التدخلات النفسية', null, ['دراسة الحالات الفردية', 'الإحالات', 'الإرشاد الجمعي']],
+        ['دعم التميز', null, ['رعاية المتفوقين', 'برامج الموهوبين', 'التحصيل الدراسي']],
+        ['الدعم العلاجي للطلاب', null, ['برامج المتأخرين دراسياً', 'الخطط العلاجية', 'المتابعة']],
+        ['التوعية للطلاب وأولياء الأمور', null, ['النشرات التوعوية', 'اللقاءات', 'رسائل التواصل']]] },
+    leader:{ name:'نموذج القيادة المدرسية (المدير والوكيل)', official:true, note:'أوزان هذا النموذج غير واضحة في نسخة الدليل المتاحة، لذلك تُعرض البنود بدون نسب.',
+      items: [
+        ['أداء الواجبات الوظيفية', null, ['سجل الدوام', 'التكاليف', 'المهام اليومية']],
+        ['التفاعل مع المجتمع المهني وأولياء الأمور', null, ['الشراكات المجتمعية', 'اجتماعات أولياء الأمور', 'تبادل الخبرات']],
+        ['العمل بمرونة في الظروف المتنوعة', null, ['خطط الطوارئ', 'التعليم عن بعد', 'حلول المواقف']],
+        ['دعم الابتكار', null, ['المبادرات النوعية', 'تحفيز المعلمين', 'المشاريع']],
+        ['إجراءات الانضباط', null, ['متابعة الحضور', 'قواعد السلوك', 'الإجراءات المتخذة']],
+        ['إدارة الموارد', null, ['الميزانية التشغيلية', 'العهد والمستودعات', 'الصيانة']],
+        ['التخطيط للتطوير المهني', null, ['خطة التطوير المهني', 'الاحتياجات التدريبية', 'التدريب الداخلي']],
+        ['التغذية الراجعة', null, ['الزيارات الصفية', 'استمارات المتابعة', 'التوصيات']],
+        ['تقويم أداء العاملين', null, ['مواثيق الأداء', 'سجلات المتابعة', 'نتائج التقويم']],
+        ['الإجراءات العلمية لتحسين نواتج التعلم', null, ['تحليل النتائج', 'خطط التحسين', 'اختبارات نافس']],
+        ['التخطيط المدرسي', null, ['الخطة التشغيلية', 'التقويم الذاتي', 'الخطة الاستراتيجية']],
+        ['البيئة الآمنة', null, ['الأمن والسلامة', 'تجربة الإخلاء', 'بلاغات الصيانة']],
+        ['توظيف المنصات الرقمية', null, ['نظام نور', 'منصة مدرستي', 'التعاملات الإلكترونية']]] },
+    lab:{ name:'نموذج محضر المختبر', official:true, note:'أوزان هذا النموذج غير واضحة في نسخة الدليل المتاحة، لذلك تُعرض البنود بدون نسب.',
+      items: [
+        ['تخطيط النشاط اليومي', null, ['الخطة اليومية', 'جدول التجارب', 'التنسيق مع المعلمين']],
+        ['الأسس العلمية', null, ['أدلة التجارب', 'النشرات العلمية']],
+        ['توفير المستلزمات', null, ['طلبات المواد', 'سجل المستهلكات', 'الجرد']],
+        ['السلامة في المختبر', null, ['تعليمات السلامة', 'طفايات الحريق', 'سجل الحوادث']],
+        ['تجهيز الأجهزة', null, ['تجهيز التجارب', 'صيانة الأجهزة', 'صور التجهيز']],
+        ['التقارير الأسبوعية', null, ['التقرير الأسبوعي', 'سجل الاستخدام']],
+        ['التقارير الدورية عن الأجهزة', null, ['تقرير حالة الأجهزة', 'بلاغات الأعطال']]] },
+    admin:{ name:'الوظائف الإدارية (ميثاق الأداء: الأهداف والجدارات)', official:false, note:'شاغلو الوظائف الإدارية يُقيَّمون بميثاق أداء (4–6 أهداف يتفق عليها الموظف ومديره) مع الجدارات. هذه البنود إطار عام لتنظيم الشواهد.',
+      items: [
+        ['تحقيق أهداف ميثاق الأداء', null, ['ميثاق الأداء', 'تقارير الإنجاز', 'المهام المنجزة']],
+        ['المسؤولية', null, ['الالتزام بالدوام', 'إنجاز المهام في وقتها', 'التكاليف']],
+        ['العمل الجماعي', null, ['المشاركة في اللجان', 'التعاون مع الزملاء', 'الفعاليات']],
+        ['المرونة للتغيير', null, ['تطبيق الأنظمة الجديدة', 'التحول الرقمي', 'حل المشكلات']],
+        ['المبادرة', null, ['المبادرات', 'المقترحات', 'تطوير الإجراءات']],
+        ['التطوير المهني', null, ['الدورات التدريبية', 'الشهادات', 'ورش العمل']]] }
+  };
+})();
+const PF_MODEL_LABELS = { teacher:'معلم', activity:'معلم + تكليف نشاط طلابي', health:'معلم + تكليف توجيه صحي', counselor:'موجه طلابي', leader:'قيادة مدرسية (مدير / وكيل)', lab:'محضر مختبر', admin:'وظيفة إدارية' };
+function pfModelKey(title, model){
+  if (model && PF_MODELS[model]) return model;   // يحدده المدير من «المنسوبون»
+  const t = String(title || '');
+  if (/رائد\s*نشاط/.test(t)) return 'activity';
+  if (/موجه\s*صحي/.test(t)) return 'health';
+  if (/موجه\s*طلابي|مرشد/.test(t)) return 'counselor';
+  if (/وكيل|مدير/.test(t)) return 'leader';
+  if (/محضر/.test(t)) return 'lab';
+  if (!t || /معلم/.test(t)) return 'teacher';
+  return 'admin';
+}
+const PF_WIT = /^(school_work|photo_witness|student_product|lesson|wit_other)$/;
+/* جاهزية الملف: مجموع أوزان البنود التي لها شاهد واحد على الأقل */
+function pfReadiness(pf, title, model){
+  const M = PF_MODELS[pfModelKey(title, model)], items = M.items, n = items.length;
+  const cnt = items.map(() => 0); let other = 0;
+  ((pf && pf.items) || []).forEach(x => { if (!PF_WIT.test(x.type)) return; const a = +x.ax || 0; if (a >= 1 && a <= n) cnt[a - 1]++; else other++; });
+  const w = items.map(it => it[1] == null ? 100 / n : it[1]), tot = w.reduce((s, v) => s + v, 0);
+  const got = w.reduce((s, v, i) => s + (cnt[i] ? v : 0), 0);
+  return { model:M, key:pfModelKey(title, model), cnt, other, pct: Math.round(got / tot * 100), done: cnt.filter(Boolean).length, n,
+           missing: items.map((it, i) => cnt[i] ? null : it[0]).filter(Boolean) };
+}
 
 </script>
 <script>
@@ -456,33 +574,12 @@ const TYPES = {
   lesson:{l:'درس تطبيقي',i:'📘',k:'wit',c:'#1d5a6e',b:'#e3eff3'},
   wit_other:{l:'شاهد آخر',i:'📎',k:'wit',c:'#5b6b77',b:'#eef1f3'}
 };
-/* نموذج الشواهد الجاهز — معايير تقويم الأداء الوظيفي */
-const AX_TEACHER = [
-  ['أداء الواجبات الوظيفية', ['التقيّد بالدوام الرسمي', 'تأدية الحصص وفق الجدول', 'المناوبة والإشراف', 'التحضير وإعداد الدروس']],
-  ['التفاعل مع المجتمع المهني', ['مجتمعات التعلم المهنية', 'تبادل الزيارات', 'الدروس التطبيقية', 'حضور الدورات وورش العمل']],
-  ['التفاعل مع أولياء الأمور', ['التواصل مع أولياء الأمور', 'تقارير مستوى الطلاب', 'اجتماع أولياء الأمور', 'الخطة الأسبوعية لولي الأمر']],
-  ['التنويع في استراتيجيات التدريس', ['استراتيجيات التعلم النشط', 'التعلم التعاوني', 'صور تطبيق الاستراتيجيات', 'خرائط ذهنية']],
-  ['تحسين نتائج المتعلمين', ['الخطط العلاجية', 'برامج الإثراء', 'تكريم المتفوقين', 'مقارنة النتائج']],
-  ['إعداد وتنفيذ خطة التعلم', ['توزيع المنهج', 'التحضير', 'الخطة الأسبوعية', 'الواجبات والأنشطة']],
-  ['توظيف تقنيات ووسائل التعلم المناسبة', ['منصة مدرستي', 'العروض التقديمية', 'الوسائل التعليمية', 'الاختبارات الإلكترونية']],
-  ['تهيئة البيئة التعليمية', ['مراعاة الفروق الفردية', 'التحفيز والتعزيز', 'قواعد الصف', 'الأنشطة الصفية']],
-  ['الإدارة الصفية', ['ضبط سلوك الطلاب', 'إدارة الوقت', 'سجل المتابعة', 'جذب الانتباه']],
-  ['تحليل نتائج المتعلمين وتشخيص مستوياتهم', ['الاختبار التشخيصي', 'تحليل النتائج', 'تصنيف الطلاب', 'الرسوم البيانية للنتائج']],
-  ['تنوع أساليب التقويم', ['اختبارات ورقية وإلكترونية', 'المشاريع والبحوث', 'ملفات أعمال الطلاب', 'التقويم الذاتي والأقران']]
-];
-const AX_ADMIN = [
-  ['أداء الواجبات الوظيفية', ['الانضباط في الدوام', 'إنجاز المهام المكلّف بها', 'المناوبة والإشراف']],
-  ['التخطيط والتنظيم', ['الخطة الفصلية', 'الجداول والتنظيمات', 'توزيع المهام']],
-  ['المتابعة والتقويم', ['سجلات المتابعة', 'التقارير الدورية', 'استمارات التقويم']],
-  ['التواصل مع المجتمع المدرسي وأولياء الأمور', ['رسائل التواصل', 'الاجتماعات', 'الشراكات المجتمعية']],
-  ['البرامج والمبادرات', ['تقارير البرامج', 'المبادرات النوعية', 'الفعاليات']],
-  ['اللجان والاجتماعات', ['محاضر الاجتماعات', 'قرارات اللجان', 'التكاليف']],
-  ['التطوير المهني', ['الدورات التدريبية', 'ورش العمل', 'الشهادات']],
-  ['توظيف التقنية', ['الأنظمة الإلكترونية (نور، مدرستي)', 'النماذج الرقمية', 'التواصل الإلكتروني']]
-];
-const isTeacherJob = () => !ME.title || /معلم/.test(ME.title);
-const AXES = () => isTeacherJob() ? AX_TEACHER : AX_ADMIN;
+/* نموذج الشواهد الجاهز — من نماذج تقييم الأداء الوظيفي الرسمية (PF_MODELS في الملف المشترك) */
+const MODEL = () => PF_MODELS[pfModelKey(ME.title, ME.model)];
+const isTeacherJob = () => MODEL().official;
+const AXES = () => MODEL().items;
 const axOf = x => { const n = +x.ax || 0; return n >= 1 && n <= AXES().length ? n : 0; };
+const AR = n => String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
 let AXV = null, FORM_AX = 0;
 const JOBS = ['معلم','معلم أول','معلم ممارس','معلم متقدم','معلم خبير','وكيل الشؤون التعليمية','وكيل شؤون الطلاب','وكيل الشؤون المدرسية','موجه طلابي','رائد نشاط','موجه صحي','أمين مصادر التعلم','محضر مختبر','إداري','مساعد إداري','سكرتير','معلم تربية خاصة','مدير المدرسة'];
 let MODE = 'own', ID = null, STAFF = null, ME = null, PF = null, TAB = 'ach', FILTER = 'all', EDIT = null, PENDING = [];
@@ -575,25 +672,28 @@ function renderPane(){
   $('pane').querySelectorAll('.chips button').forEach(b => b.onclick = () => { FILTER = b.dataset.f; renderPane(); });
 }
 function renderWit(){
-  const own = MODE === 'own', AX = AXES(), wit = PF.items.filter(x => (TYPES[x.type] || TYPES.ach_other).k === 'wit');
-  const cnt = n => wit.filter(x => axOf(x) === n).length;
+  const own = MODE === 'own', M = MODEL(), AX = M.items, R0 = pfReadiness(PF, ME.title, ME.model), wit = PF.items.filter(x => (TYPES[x.type] || TYPES.ach_other).k === 'wit');
   const sortL = l => l.sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.createdAt || '').localeCompare(a.createdAt || ''));
+  const unit = pfModelKey(ME.title, ME.model) === 'admin' ? 'محوراً' : 'بنداً';
   if (AXV === null){
-    const done = AX.filter((_, i) => cnt(i + 1) > 0).length, pct = Math.round(done / AX.length * 100), oth = cnt(0);
+    const oth = R0.other;
     $('pane').innerHTML = `
-      <div class="prog"><div><b>📋 نموذج الشواهد${isTeacherJob() ? ' — معايير تقويم الأداء الوظيفي' : ''}</b><div class="muted" style="font-size:.8rem">اكتمل ${done} من ${AX.length} ${isTeacherJob() ? 'معياراً' : 'محوراً'}${own ? ' — اضغط على أي بند لإضافة شواهده' : ''}</div></div><div class="bar"><i style="width:${pct}%"></i></div><b>${pct}%</b></div>
-      <div class="axg">${AX.map(([t], i) => { const c = cnt(i + 1); return `<button class="ax ${c ? 'done' : ''}" data-ax="${i + 1}"><div class="no">${i + 1}</div><div class="tt"><b>${E(t)}</b><small>${c ? '✓ ' + c + ' شاهد' : (own ? '＋ أضف شاهداً' : 'لا يوجد')}</small></div></button>`; }).join('')}
-        ${oth || own ? `<button class="ax oth ${oth ? 'done' : ''}" data-ax="0"><div class="no">＋</div><div class="tt"><b>شواهد أخرى / غير مصنّفة</b><small>${oth ? oth + ' شاهد' : (own ? 'أي شاهد لا يندرج تحت البنود' : 'لا يوجد')}</small></div></button>` : ''}
+      <div class="prog"><div style="flex:1;min-width:200px"><b>📋 ${E(M.name)}</b><div class="muted" style="font-size:.8rem">اكتمل ${R0.done} من ${R0.n} ${unit}${own ? ' — اضغط على أي بند لإضافة شواهده' : ''}</div><div class="bar" style="margin-top:8px"><i style="width:${R0.pct}%"></i></div></div>
+        <div class="rd">${R0.pct}%<small>نسبة الجاهزية</small></div></div>
+      ${M.note ? `<div class="mnote">ℹ️ ${E(M.note)}</div>` : ''}
+      <div class="axg">${AX.map(([t, w, sg], i) => { const c = R0.cnt[i], tg = Math.max(1, sg.length), pc = Math.min(100, Math.round(c / tg * 100));
+        return `<button class="ax ${c ? 'done' : ''}" data-ax="${i + 1}"><div class="no">${c ? '✓' : AR(i + 1)}</div><div class="tt"><b>${E(t)}${w ? `<span class="wt">${AR(w)}٪</span>` : ''}</b><small>${c ? AR(c) + ' شاهد' : (own ? '＋ أضف شاهداً' : 'لا يوجد')}</small><div class="mb"><i style="width:${pc}%"></i></div></div></button>`; }).join('')}
+        ${oth || own ? `<button class="ax oth ${oth ? 'done' : ''}" data-ax="0"><div class="no">＋</div><div class="tt"><b>شواهد أخرى / غير مصنّفة</b><small>${oth ? AR(oth) + ' شاهد' : (own ? 'أي شاهد لا يندرج تحت البنود' : 'لا يوجد')}</small></div></button>` : ''}
       </div>`;
     $('pane').querySelectorAll('[data-ax]').forEach(b => b.onclick = () => { AXV = +b.dataset.ax; renderPane(); window.scrollTo({ top: $('tabs').offsetTop - 10, behavior:'smooth' }); });
     return;
   }
-  const n = AXV, it = n ? AX[n - 1] : ['شواهد أخرى / غير مصنّفة', []], list = sortL(wit.filter(x => axOf(x) === n));
+  const n = AXV, it = n ? AX[n - 1] : ['شواهد أخرى / غير مصنّفة', null, []], list = sortL(wit.filter(x => axOf(x) === n));
   $('pane').innerHTML = `
-    <div class="axh"><div class="top"><div class="no">${n || '＋'}</div><h3>${E(it[0])}</h3>
+    <div class="axh"><div class="top"><div class="no">${n ? AR(n) : '＋'}</div><h3>${E(it[0])}${it[1] ? ` <span style="font-size:.8rem;background:rgba(233,196,106,.25);color:#f3d98d;border-radius:10px;padding:2px 8px">الوزن ${AR(it[1])}٪</span>` : ''}</h3>
       <button class="btn sm" style="background:rgba(255,255,255,.14)" onclick="AXV=null;renderPane()">→ كل البنود</button>
       ${own ? `<button class="btn lt sm" onclick="addToAx(${n})">＋ إضافة شاهد</button>` : ''}</div>
-      ${it[1].length ? `<div class="sg">💡 شواهد مقترحة${own ? ' (اضغط لتعبئة العنوان)' : ''}:<br>${it[1].map(g => `<span class="${own ? 'ok' : ''}" ${own ? `onclick="addToAx(${n},this.textContent)"` : ''}>${E(g)}</span>`).join('')}</div>` : ''}
+      ${it[2].length ? `<div class="sg">💡 شواهد مقترحة${own ? ' (اضغط لتعبئة العنوان)' : ''}:<br>${it[2].map(g => `<span class="${own ? 'ok' : ''}" ${own ? `onclick="addToAx(${n},this.textContent)"` : ''}>${E(g)}</span>`).join('')}</div>` : ''}
     </div>
     <div class="items">${list.length ? list.map(itemHTML).join('') : `<div class="card empty-s"><div>📂</div>لم تُضف شواهد لهذا البند بعد${own ? `<br><button class="btn g sm" style="margin-top:12px" onclick="addToAx(${n})">＋ إضافة شاهد</button>` : ''}</div>`}</div>`;
 }
@@ -625,7 +725,7 @@ function renderForm(){
     <div class="grid">
       <div style="grid-column:1/-1"><label class="f">العنوان *</label><input type="text" id="fTitle" value="${v('title')}" placeholder="مثال: اجتياز دورة استراتيجيات التعلم النشط"></div>
       <div><label class="f">التصنيف</label><select id="fType"><optgroup label="الإنجازات">${opt('ach')}</optgroup><optgroup label="الشواهد والأعمال">${opt('wit')}</optgroup></select></div>
-      <div id="fAxW" style="grid-column:1/-1"><label class="f">${isTeacherJob() ? 'المعيار' : 'المحور'} (من نموذج الشواهد)</label><select id="fAx"><option value="0">شواهد أخرى / غير مصنّفة</option>${AXES().map(([t], i) => `<option value="${i + 1}">${i + 1}. ${E(t)}</option>`).join('')}</select></div>
+      <div id="fAxW" style="grid-column:1/-1"><label class="f">البند (من ${E(MODEL().name)})</label><select id="fAx"><option value="0">شواهد أخرى / غير مصنّفة</option>${AXES().map(([t, w], i) => `<option value="${i + 1}">${i + 1}. ${E(t)}${w ? ' (' + w + '٪)' : ''}</option>`).join('')}</select></div>
       <div><label class="f">التاريخ</label><input type="date" id="fDate" value="${v('date')}"><div class="muted" id="fHj" style="margin-top:4px"></div></div>
       <div><label class="f">الجهة المانحة / المنظِّمة</label><input type="text" id="fOrg" value="${v('org')}" placeholder="مثال: إدارة تعليم جدة"></div>
       <div><label class="f">المدة</label><input type="text" id="fDur" value="${v('duration')}" placeholder="مثال: 12 ساعة تدريبية"></div>
@@ -707,6 +807,7 @@ function renderMe(){
     <div class="grid" style="margin-top:14px">
       <div><label class="f">الاسم</label><input type="text" value="${E(ME.name)}" disabled style="background:#f4f7f6"><div class="muted" style="font-size:.75rem;margin-top:3px">يُعدَّل من إدارة المدرسة</div></div>
       <div><label class="f">المسمى الوظيفي</label><input type="text" id="mJob" list="jobs" value="${E(ME.title || '')}" placeholder="اختر أو اكتب المسمى"><datalist id="jobs">${JOBS.map(j => `<option value="${j}">`).join('')}</datalist></div>
+      <div><label class="f">نموذج تقييم الأداء</label><input type="text" value="${E(PF_MODEL_LABELS[pfModelKey(ME.title, ME.model)])}" disabled style="background:#f4f7f6"><div class="muted" style="font-size:.75rem;margin-top:3px">${ME.model ? 'حدّدته إدارة المدرسة' : 'تلقائي حسب المسمى — تستطيع الإدارة تغييره'}</div></div>
       <div><label class="f">التخصص</label><input type="text" id="mMajor" value="${v('major')}"></div>
       <div><label class="f">المؤهل العلمي</label><select id="mDeg">${['', 'دبلوم', 'بكالوريوس', 'دبلوم عالٍ', 'ماجستير', 'دكتوراه'].map(d => `<option ${p.degree === d ? 'selected' : ''}>${d}</option>`).join('')}</select></div>
       <div><label class="f">سنوات الخبرة</label><input type="text" inputmode="numeric" id="mExp" value="${v('exp')}"></div>
@@ -715,7 +816,7 @@ function renderMe(){
       <div style="grid-column:1/-1"><label class="f">نبذة مهنية</label><textarea id="mBio">${v('bio')}</textarea></div>
     </div>
     <button class="btn g" style="width:100%;margin-top:14px" onclick="saveMe(this)">💾 حفظ البيانات</button>
-    <div class="imp"><span style="font-size:1.8rem">📥</span><div style="flex:1;min-width:180px"><b>استيراد ملف إنجازي من بوابة مَعَاك</b><p>ينقل بياناتك وإنجازاتك وشواهدك مع مرفقاتها من منصة مَعَاك إلى هنا. لا يحذف شيئاً من هنا ولا من مَعَاك، ولا يكرر ما سبق استيراده.</p></div><button class="btn sm" style="background:#6b4c9a;color:#fff" onclick="importMaak(this)">استيراد الآن</button></div>
+    ${maakMatch(ME.name) ? `<div class="imp"><span style="font-size:1.8rem">📥</span><div style="flex:1;min-width:180px"><b>استيراد ملف إنجازي من بوابة مَعَاك</b><p>ينقل بياناتك وإنجازاتك وشواهدك مع مرفقاتها من منصة مَعَاك إلى هنا. لا يحذف شيئاً من هنا ولا من مَعَاك، ولا يكرر ما سبق استيراده.</p></div><button class="btn sm" style="background:#6b4c9a;color:#fff" onclick="importMaak(this)">استيراد الآن</button></div>` : ''}
   </div>`;
   $('mePhoto').onchange = async e => { const f = e.target.files[0]; if (!f) return; PH = await prepFile(f); $('meAv').innerHTML = `<img src="${PH.preview}">`; };
 }
@@ -736,6 +837,17 @@ async function saveMe(btn){
 }
 
 /* ---------- الاستيراد من مَعَاك ---------- */
+/* معلمو بوابة مَعَاك فقط (الاسم في مَعَاك ← البرنامج) */
+const MAAK_T = { 'حسين منصور الكبيشي':'yaseer', 'سعد سالم الزهراني':'yaseer', 'محمد أحمد السهيمي':'dumaj', 'زين العابدين سعد القرني':'dumaj', 'علي سعيد الغامدي':'dumaj', 'علي محمد المالكي':'dumaj', 'حسن علي العلياني':'dumaj', 'علي محمد الزهراني':'dumaj' };
+const nmTok = n => String(n || '').replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/[ًٌٍَُِّْـ]/g, '').replace(/\s+بن\s+/g, ' ').replace(/عبد\s+/g, 'عبد').trim().split(/\s+/);
+function maakMatch(name){
+  const a = nmTok(name);
+  for (const [mn, prog] of Object.entries(MAAK_T)){
+    const b = nmTok(mn), [s, l] = a.length <= b.length ? [a, b] : [b, a];
+    if (a[0] === b[0] && a[a.length - 1] === b[b.length - 1] && s.every(w => l.includes(w))) return { name: mn, prog };
+  }
+  return null;
+}
 const MAAK = { url:'https://pyrxwqgapwjwhiskowhk.supabase.co', table:'teacher_portfolios', programs:['yaseer', 'dumaj'],
   key:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB5cnh3cWdhcHdqd2hpc2tvd2hrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE1NDM3MjcsImV4cCI6MjA4NzExOTcyN30.nEJivQNdtbI8Vn7thWe29zHEOzK-Z8eZVQMnSyvKlII' };
 async function maakGet(k){
@@ -756,9 +868,10 @@ async function maakFile(a, folder){
 async function importMaak(btn){
   const o = btn.textContent; btn.disabled = true; btn.textContent = '⏳ جارٍ البحث...';
   try {
-    let data = null, prog = '';
-    for (const p of MAAK.programs){ data = await maakGet(p + '_' + encodeURIComponent(ME.name.trim())); if (data){ prog = p; break; } }
-    if (!data) return alert('لم نجد ملف إنجاز باسم «' + ME.name + '» في بوابة مَعَاك.\nتأكد أن الاسم مكتوب بنفس الطريقة في المنصتين.');
+    const mm = maakMatch(ME.name); if (!mm) return;
+    let data = null, prog = mm.prog;
+    data = await maakGet(prog + '_' + encodeURIComponent(mm.name));
+    if (!data) return alert('ملفك في بوابة مَعَاك فارغ أو لم يُحفظ بعد.');
     const ent = Array.isArray(data.entries) ? data.entries : [], wit = Array.isArray(data.witnesses) ? data.witnesses : [];
     const have = new Set(PF.items.filter(x => x.src).map(x => x.src));
     const newE = ent.filter(e => !have.has('maak:' + prog + ':e' + e.id)), newW = wit.filter(w => !have.has('maak:' + prog + ':w' + w.id));
@@ -812,8 +925,12 @@ function printPF(){
     return `<div class="pit" style="border-right-color:${t.c}"><h4>${t.i} ${E(x.title)}</h4><div class="m">${t.l}${x.date ? ' · ' + hj(x.date) : ''}${x.org ? ' · ' + E(x.org) : ''}</div>${x.desc ? `<p>${E(x.desc)}</p>` : ''}${ims.length ? `<div class="ims">${ims.map(f => `<img src="${E(Circ.fileURL(f.p))}">`).join('')}</div>` : ''}</div>`; };
   const witPrint = () => {
     const wit = PF.items.filter(x => (TYPES[x.type] || TYPES.ach_other).k === 'wit'); if (!wit.length) return '';
-    const AX = AXES(); let h = `<h2 class="sec">الشواهد (${wit.length})</h2>`;
-    [...AX.map((a, i) => [i + 1, a[0]]), [0, 'شواهد أخرى']].forEach(([n, t]) => { const l = wit.filter(x => axOf(x) === n); if (l.length) h += `<h3 class="axs">${n ? n + '. ' : ''}${E(t)} (${l.length})</h3>` + l.map(card).join(''); });
+    const M = MODEL(), R0 = pfReadiness(PF, ME.title, ME.model), hasW = M.items.some(it => it[1]);
+    let h = `<div class="axpg">${head}<h2 class="sec">فهرس الشواهد — ${E(M.name)}</h2><div class="rdy">نسبة الجاهزية: ${R0.pct}% — اكتمل ${R0.done} من ${R0.n} بنداً</div>
+      <table class="ix"><tr><th style="width:9mm">م</th><th>البند</th>${hasW ? '<th style="width:18mm">الوزن</th>' : ''}<th style="width:22mm">عدد الشواهد</th><th style="width:22mm">الحالة</th></tr>
+      ${M.items.map((it, i) => `<tr class="${R0.cnt[i] ? '' : 'no'}"><td>${i + 1}</td><td>${E(it[0])}</td>${hasW ? `<td>${it[1] ? it[1] + '٪' : '—'}</td>` : ''}<td>${R0.cnt[i]}</td><td>${R0.cnt[i] ? '✓ مكتمل' : 'لا يوجد'}</td></tr>`).join('')}
+      ${R0.other ? `<tr><td>—</td><td>شواهد أخرى</td>${hasW ? '<td>—</td>' : ''}<td>${R0.other}</td><td></td></tr>` : ''}</table></div>`;
+    [...M.items.map((a, i) => [i + 1, a[0], a[1]]), [0, 'شواهد أخرى', null]].forEach(([n, t, w]) => { const l = wit.filter(x => axOf(x) === n); if (l.length) h += `<div class="axpg">${head}<h2 class="sec">${n ? n + '. ' : ''}${E(t)}${w ? ' — ' + w + '٪' : ''} (${l.length})</h2>` + l.map(card).join('') + '</div>'; });
     return h;
   };
   $('printArea').innerHTML = `<div class="pp">
