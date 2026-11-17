@@ -156,8 +156,8 @@ textarea{min-height:120px;resize:vertical}
   <section id="vDone" class="hide">
     <div class="card center" id="doneHead">
       <div class="ok-ic">✓</div>
-      <h2 style="justify-content:center">تم توقيعك بالاطلاع بنجاح</h2>
-      <p class="muted">شكراً لك، خطوة أخيرة: أرسل نسخة الإقرار لمدير المدرسة.</p>
+      <h2 style="justify-content:center" id="doneH">تم توقيعك بالاطلاع بنجاح</h2>
+      <p class="muted" id="doneP">شكراً لك، خطوة أخيرة: أرسل نسخة الإقرار لمدير المدرسة.</p>
       <a class="btn wa" id="toPrincipal" target="_blank" style="margin-top:14px;width:100%">📲 إرسال نسخة الإقرار للمدير عبر الواتساب</a>
     </div>
     <div class="card">
@@ -588,7 +588,9 @@ async function submitSig(btn){
 /* ---------- الإقرار ---------- */
 function showDone(r, viewOnly){
   $('vDone').classList.remove('hide');
-  if (viewOnly) $('doneHead').classList.add('hide');
+  const sT = Circ.session('teacher'), owner = !viewOnly || !KEY || (sT && sT.id === ME.id);   // صاحب الإقرار وليس المدير
+  if (!owner) $('doneHead').classList.add('hide');
+  else if (viewOnly){ $('doneH').textContent = 'أنت موقّع على هذا التعميم ✓'; $('doneP').textContent = 'تستطيع إرسال نسخة الإقرار لمدير المدرسة في أي وقت.'; }
   $('rSchool').textContent = SET.school; $('rName').textContent = r.name; $('rTitle').textContent = META.title;
   $('rNum').textContent = `رقم ${META.number || '—'} · ${META.date}`; $('rDate').textContent = `${r.hijri} — الساعة ${r.time}`;
   $('rSig').src = r.signature; $('rCode').textContent = r.code || '—';
