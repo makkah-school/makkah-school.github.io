@@ -633,6 +633,58 @@ function circStatus(sig, note){
   return { s:'no', l:'لم يوقّع' };
 }
 
+/* ---------- الصلاحيات المفوّضة (يمنحها المدير من «المنسوبون») ---------- */
+const CIRC_PERMS = { circ:'📄 التعاميم والإعلانات', staff:'👥 المنسوبون وكلمات المرور', tt:'🗓️ الجداول المدرسية', pf:'🏆 متابعة ملفات الإنجاز', all:'⭐ صلاحيات كاملة مثل المدير' };
+function circHasPerm(t, p){ const a = (t && t.perms) || []; return a.includes('all') || a.includes(p); }
+
+/* =====================================================================
+   الجدول المدرسي — tt.json: { cfg:{days, periods:[{s,e}]}, by:{ staffId:{ 'يوم-حصة': 'نص الحصة' } }, updatedAt, updatedBy }
+   ===================================================================== */
+const CircTT = (function(){
+  const DAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس'];
+  const DEF = { days: DAYS.slice(), periods: [['07:00','07:45'],['07:45','08:30'],['08:30','09:15'],['09:40','10:25'],['10:25','11:10'],['11:30','12:15'],['12:15','13:00']].map(([s, e]) => ({ s, e })) };
+  const digits = v => String(v == null ? '' : v).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
+  const dayIdx = v => { const s = digits(v).replace(/[أإآ]/g, 'ا'); const r = [/احد/, /اثنين|اتنين/, /ثلاثا/, /اربعا/, /خميس/]; for (let i = 0; i < 5; i++) if (r[i].test(s)) return i; return -1; };
+  const ORD = { 'اول':1, 'الاول':1, 'ثاني':2, 'الثاني':2, 'ثالث':3, 'الثالث':3 };
+  function classOf(t){
+    const s = digits(t).replace(/[أإآ]/g, 'ا');
+    let m = s.match(/(\d)\s*[\/\\\-]\s*(\d{1,2})/); if (m) return m[1] + '/' + m[2];
+    m = s.match(/(?:ال)?(اول|ثاني|ثالث)\s*(?:متوسط)?\s*[\/\-]?\s*(\d{1,2})/); if (m) return ORD[m[1]] + '/' + m[2];
+    m = s.match(/(\d)\s*م\s*(\d{1,2})/); if (m) return m[1] + '/' + m[2];
+    return '';
+  }
+  async function load(){ const d = (await getJSONsafe('tt.json')) || {}; d.cfg = Object.assign({}, DEF, d.cfg || {}); d.by = d.by || {}; return d; }
+  async function getJSONsafe(p){ try { return await Circ.getJSON(p); } catch(e){ return null; } }
+  const toMin = hm => { const [h, m] = String(hm || '0:0').split(':').map(Number); return h * 60 + (m || 0); };
+  const fmt = hm => { const [h, m] = String(hm).split(':').map(Number); const h12 = ((h + 11) % 12) + 1; return `${h12}:${String(m).padStart(2, '0')}${h < 12 ? 'ص' : 'م'}`; };
+  /* الحصة الحالية والتالية لجدول معلم */
+  function nowNext(map, cfg, when){
+    const d = when || new Date(), di = d.getDay(), m = d.getHours() * 60 + d.getMinutes(), P = cfg.periods;
+    const out = { now:null, next:null, day: di <= 4 ? di : -1 };
+    if (di <= 4){
+      for (let p = 0; p < P.length; p++){
+        const s = toMin(P[p].s), e = toMin(P[p].e), txt = map[di + '-' + (p + 1)];
+        if (m >= s && m < e && txt) out.now = { d:di, p:p + 1, t:txt, e:P[p].e };
+        if (!out.next && s > m && txt) out.next = { d:di, p:p + 1, t:txt, s:P[p].s, today:true };
+      }
+    }
+    if (!out.next) for (let k = 1; k <= 7 && !out.next; k++){ const dd = (di + k) % 7; if (dd > 4) continue; for (let p = 0; p < P.length; p++){ const txt = map[dd + '-' + (p + 1)]; if (txt){ out.next = { d:dd, p:p + 1, t:txt, s:P[p].s, today:false }; break; } } }
+    return out;
+  }
+  /* شبكة الجدول (للعرض والطباعة). cell(d,p) → html */
+  function gridHTML(cfg, cell, opt){
+    opt = opt || {}; const days = cfg.days, P = cfg.periods;
+    return `<table class="ttg${opt.cls ? ' ' + opt.cls : ''}"><thead><tr><th class="dh">اليوم</th>${P.map((p, i) => `<th>الحصة ${i + 1}${opt.times !== false ? `<small>${fmt(p.s)} – ${fmt(p.e)}</small>` : ''}</th>`).join('')}</tr></thead>
+      <tbody>${days.map((dn, d) => `<tr class="${opt.today === d ? 'today' : ''}"><th class="dh">${dn}</th>${P.map((_, p) => `<td>${cell(d, p + 1) || ''}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+  }
+  const count = map => Object.values(map || {}).filter(Boolean).length;
+  /* المشمولون بالجدول: تلقائي حسب المسمى، ويمكن تجاوزه لكل منسوب (t.tt = true / false) */
+  const EXCL = /وكيل|مدير|موجه|مرشد|رائد|اداري|إداري|سكرتير|مساعد|محضر|امين|أمين|حارس|مستخدم|تربيه خاصه|تربية خاصة|فكري|يسير|صعوبات/;
+  const autoIn = t => !EXCL.test(String((t && t.title) || ''));
+  const inScope = (t, tt) => t.tt === true || (t.tt !== false && (autoIn(t) || (tt && count((tt.by || {})[t.id]) > 0)));
+  return { DAYS, DEF, digits, dayIdx, classOf, load, nowNext, gridHTML, fmt, toMin, count, autoIn, inScope };
+})();
+
 </script>
 <script>
 const $ = id => document.getElementById(id);
