@@ -132,6 +132,7 @@ textarea{min-height:120px;resize:vertical}
       <button data-t="tNews">📢 الإعلانات</button>
       <button data-t="tStaff">👥 المنسوبون</button>
       <button data-t="tSet">⚙️ الإعدادات</button>
+      <button onclick="adminLogout()" style="flex:0 0 auto;min-width:0;color:var(--red)">🚪 خروج</button>
     </div>
 
     <!-- التعاميم -->
@@ -466,7 +467,7 @@ async function login(){
   const ok = h === CIRC_CONFIG.EVIDENCE_ADMIN_HASH || (s.pinHash ? h === s.pinHash : pin === CIRC_CONFIG.DEFAULT_PIN);
   if (!ok){ toast('رمز الدخول غير صحيح'); return; }
   sessionStorage.setItem('circ_ok', '1');
-  Circ.setSession({ role:'admin', name:'إدارة المدرسة', exp: Date.now() + 12 * 36e5 });
+  Circ.setSession({ role:'admin', name:'إدارة المدرسة', exp: Date.now() + 2 * 36e5 });
   start();
 }
 $('pin').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
@@ -481,11 +482,12 @@ async function start(){
   const c = new URLSearchParams(location.search).get('c'); if (c) openView(c);
 }
 if (Circ.DEMO) $('demoNote').classList.remove('hide');
-if (sessionStorage.getItem('circ_ok')) start();
+{ const ss = Circ.session(); if (sessionStorage.getItem('circ_ok') && ss && ss.role === 'admin') start(); else sessionStorage.removeItem('circ_ok'); }
+function adminLogout(){ sessionStorage.removeItem('circ_ok'); Circ.logout(); location.href = location.pathname; }
 
 /* ---------- التبويبات ---------- */
-document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
-  document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x === b));
+document.querySelectorAll('.tabs button[data-t]').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.tabs button[data-t]').forEach(x => x.classList.toggle('on', x === b));
   ['tCirc','tNews','tStaff','tSet'].forEach(id => $(id).classList.toggle('hide', id !== b.dataset.t));
 });
 
