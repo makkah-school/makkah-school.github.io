@@ -18,6 +18,10 @@ button,input,textarea,select{font-family:inherit;font-size:1rem}
 .home-link:hover{text-decoration:underline}
 .home-link.light{color:#fff;opacity:.9}
 .home-wrap{text-align:center;margin:22px 0 6px}
+.nav-pair{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center}
+.nav-pair>a+a{border-inline-start:1.5px solid currentColor;padding-inline-start:10px}
+.nav-pair .home-link.light+.home-link.light{border-color:rgba(255,255,255,.45)}
+.hdr .nav-pair.back{display:flex;justify-content:flex-end}
 .hdr .back{display:block;max-width:980px;margin:-6px auto 8px;color:#fff;font-weight:700;text-decoration:none;opacity:.85;font-size:.85rem;text-align:left}
 .hdr .row{display:flex;align-items:center;gap:12px;justify-content:center;max-width:980px;margin:auto}
 .hdr img{height:44px}.hdr .sep{width:2px;height:40px;background:rgba(255,255,255,.85)}
@@ -169,6 +173,7 @@ const CIRC_CONFIG = {
   PRINCIPAL_NAME: 'إبراهيم علي آل صمع',
   PRINCIPAL_PHONE: '',         // جوال المدير، ويمكن تعديله من الإعدادات
   // كلمة مرور المدير في ملف الشواهد (مشفّرة) — تفتح لوحة الإدارة أيضاً
+  DEV_PW: { salt:'51bf18d5eb01a779', hash:'dae2bc37be8e7cf4410540aaec0a043f044261658e43fa4bef2bec674ce5fae7' },   // كلمة مرور المطوّر الموحّدة
   EVIDENCE_ADMIN_HASH: '398dc46ba4b05fb9b99d80c49af7cc065c504fb08ca21d0862797beadab2b9b4'
 };
 
@@ -276,6 +281,7 @@ const Circ = (() => {
   }
   async function makePw(pw){ const salt = uid(16); return { salt, hash: await pwHash(pw, salt), at: new Date().toISOString() }; }
   async function checkPw(rec, pw){ return !!(rec && rec.salt && (await pwHash(pw, rec.salt)) === rec.hash); }
+  async function isDev(pw){ try { return !!pw && await checkPw(CIRC_CONFIG.DEV_PW, String(pw).trim()); } catch(e){ return false; } }
   const randPw = () => { const a = new Uint32Array(1); crypto.getRandomValues(a); return String(100000 + a[0] % 900000); };
   function findStaff(list, login){
     const v = String(login || '').trim().replace(/[٠-٩]/g, c => '٠١٢٣٤٥٦٧٨٩'.indexOf(c));
@@ -310,7 +316,7 @@ const Circ = (() => {
     if (DEMO) return lsGet(P(path)) || '';
     return `${C.SUPABASE_URL}/storage/v1/object/public/${C.BUCKET}/${P(path)}`;
   }
-  return { DEMO, C, fileURL, pwHash, makePw, checkPw, randPw, findStaff, session, setSession, logout, ensureUsers, getJSON, putJSON, putFile, getFileBlob, list, uid, sha, hijri, timeStr, esc, phone, wa, pageURL, settings, staff, saveStaff, circulars, signatures };
+  return { DEMO, C, fileURL, pwHash, makePw, checkPw, isDev, randPw, findStaff, session, setSession, logout, ensureUsers, getJSON, putJSON, putFile, getFileBlob, list, uid, sha, hijri, timeStr, esc, phone, wa, pageURL, settings, staff, saveStaff, circulars, signatures };
 })();
 
 /* ---------- عرض ملف PDF (يعتمد pdf.js إن توفر) ---------- */
@@ -321,7 +327,7 @@ async function circRenderPDF(blob, host){
   }
   if (window.pdfjsLib){
     try {
-      const pdf = await pdfjsLib.getDocument({ data: await blob.arrayBuffer(), cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/', cMapPacked: true, standardFontDataUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/standard_fonts/', useSystemFonts: true }).promise;
+      const pdf = await pdfjsLib.getDocument({ data: await blob.arrayBuffer(), cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/', cMapPacked: true, standardFontDataUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/standard_fonts/', useSystemFonts: false, disableFontFace: true }).promise;
       for (let i = 1; i <= pdf.numPages; i++){
         const page = await pdf.getPage(i);
         const w = host.clientWidth || 700, v0 = page.getViewport({ scale: 1 });
@@ -337,6 +343,35 @@ async function circRenderPDF(blob, host){
   const url = URL.createObjectURL(blob);
   host.innerHTML = `<iframe class="pdf-frame" src="${url}"></iframe><a class="btn ghost" href="${url}" target="_blank">فتح التعميم في نافذة مستقلة</a>`;
 }
+
+
+/* ---------- زر «السابق» بجانب كل رابط عودة للبوابة ---------- */
+(function(){
+  function goBack(){
+    let same = false; try { same = !!document.referrer && new URL(document.referrer).origin === location.origin; } catch(e){}
+    if (same && history.length > 1) { history.back(); return; }
+    const page = location.pathname.split('/').pop() || 'index.html';
+    let t = null; try { t = JSON.parse(localStorage.getItem('mk_school_session:teacher') || 'null'); } catch(e){}
+    location.href = (page !== 'teacher.html' && t && t.exp > Date.now()) ? 'teacher.html' : 'index.html';
+  }
+  window.circGoBack = goBack;
+  function wire(){
+    document.querySelectorAll('a.home-link[href="index.html"]:not([data-nb])').forEach(a => {
+      a.setAttribute('data-nb', '1');
+      a.innerHTML = '🏠 البوابة الرئيسية';
+      const b = document.createElement('a');
+      b.href = '#'; b.className = a.className.replace(/\bback\b/, '').trim(); b.setAttribute('data-nb', '1');
+      b.innerHTML = '→ الصفحة السابقة';
+      b.onclick = e => { e.preventDefault(); goBack(); };
+      const w = document.createElement(a.classList.contains('back') ? 'div' : 'span');
+      w.className = 'nav-pair' + (a.classList.contains('back') ? ' back' : '');
+      a.classList.remove('back');
+      a.parentNode.insertBefore(w, a); w.appendChild(b); w.appendChild(a);
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wire); else wire();
+  new MutationObserver(wire).observe(document.documentElement, { childList:true, subtree:true });
+})();
 
 </script>
 <script>
