@@ -251,9 +251,10 @@ table.ttg td.free{color:#9aa6ad;font-weight:500}
     <div id="tStaff" class="hide">
       <div class="card">
         <h2><span class="dot"></span>أرقام الجوالات دفعة واحدة</h2>
-        <p class="muted" style="margin-bottom:8px">الصق سطراً لكل معلم بصيغة: <b>الاسم - الجوال</b> (أو انسخ عمودين من Excel). يُطابق النظام بالاسم، ويُضاف من لا يوجد في القائمة.</p>
+        <p class="muted" style="margin-bottom:8px">الصق سطراً لكل منسوب بصيغة: <b>الاسم - الجوال - المسمى (اختياري)</b> أو انسخ الأعمدة من Excel أو من كشف نور. يطابق النظام الاسم حتى لو اختلف (ثلاثي/رباعي، بن، همزات)، ويكمل الاسم الرباعي، ويضيف من لا يوجد.</p>
         <textarea id="bulk" placeholder="سعد سالم الزهراني - 0550000000"></textarea>
         <button class="btn g" style="margin-top:10px" onclick="applyBulk()">تطبيق</button>
+        <div id="bulkRes"></div>
       </div>
       <div class="card">
         <h2><span class="dot"></span>قائمة المنسوبين <span class="muted" id="staffCount"></span></h2>
@@ -706,7 +707,28 @@ function circHasPerm(t, p){ const a = (t && t.perms) || []; return a.includes('a
    ===================================================================== */
 const CircTT = (function(){
   const DAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس'];
-  const DEF = { days: DAYS.slice(), periods: [['07:00','07:45'],['07:45','08:30'],['08:30','09:15'],['09:40','10:25'],['10:25','11:10'],['11:30','12:15'],['12:15','13:00']].map(([s, e]) => ({ s, e })) };
+  const toMin = hm => { const [h, m] = String(hm || '0:0').split(':').map(Number); return h * 60 + (m || 0); };
+  const f2 = m => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
+  /* توليد مواعيد الحصص من بداية الحصة الأولى: طول الحصة، فسحة بعد الحصة 3، صلاة بعد الحصة 5 */
+  function gen(first, n, len, brk, pray){ const out = []; let m = toMin(first); for (let i = 1; i <= n; i++){ out.push({ s:f2(m), e:f2(m + len) }); m += len; if (i === 3) m += brk; if (i === 5) m += pray; } return out; }
+  /* توقيت تعليم جدة 1448–1449هـ (حسب الإعلانات المنشورة — قابلة للتعديل) */
+  const SETS = { summer:{ n:'☀️ صيفي', first:'07:00', len:45, brk:25, pray:20 }, winter:{ n:'❄️ شتوي', first:'07:30', len:45, brk:25, pray:20 }, ramadan:{ n:'🌙 رمضان', first:'09:00', len:35, brk:15, pray:0 } };
+  const DEF_RANGES = [ { set:'summer', from:'2026-08-30', to:'2026-10-25' }, { set:'winter', from:'2026-10-26', to:'2027-02-07' }, { set:'ramadan', from:'2027-02-08', to:'2027-03-13' }, { set:'summer', from:'2027-03-14', to:'2027-07-01' } ];
+  const DEF_HOL = [
+    { n:'إجازة الخريف', from:'2026-11-20', to:'2026-11-28' },
+    { n:'إجازة منتصف العام', from:'2027-01-08', to:'2027-01-16' },
+    { n:'إجازة يوم التأسيس', from:'2027-02-19', to:'2027-02-22' },
+    { n:'إجازة عيد الفطر', from:'2027-02-26', to:'2027-03-13' },
+    { n:'إجازة عيد الأضحى', from:'2027-04-30', to:'2027-05-22' },
+    { n:'الإجازة الصيفية', from:'2027-07-02', to:'2027-08-28' } ];
+  const DEF = { days: DAYS.slice(), mode:'auto', periods: gen('07:00', 7, 45, 25, 20),
+    sets: { summer: gen('07:00', 7, 45, 25, 20), winter: gen('07:30', 7, 45, 25, 20), ramadan: gen('09:00', 7, 35, 15, 0) },
+    ranges: DEF_RANGES, holidays: DEF_HOL };
+  const iso = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  const holidayOn = (cfg, d) => (cfg.holidays || []).find(h => h.from && h.to && iso(d) >= h.from && iso(d) <= h.to) || null;
+  function setFor(cfg, d){ if (cfg.mode && cfg.mode !== 'auto') return cfg.mode; const r = (cfg.ranges || []).find(r => iso(d) >= r.from && iso(d) <= r.to); return r ? r.set : 'summer'; }
+  /* الإعدادات الفعلية ليوم معيّن: المواعيد حسب الموسم + الإجازة إن وُجدت */
+  function eff(cfg, d){ d = d || new Date(); const k = setFor(cfg, d), P = (cfg.sets && cfg.sets[k]) || cfg.periods; return Object.assign({}, cfg, { periods: P, set: k, setName: SETS[k] ? SETS[k].n : k, holiday: holidayOn(cfg, d) }); }
   const digits = v => String(v == null ? '' : v).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
   const dayIdx = v => { const s = digits(v).replace(/[أإآ]/g, 'ا'); const r = [/احد/, /اثنين|اتنين/, /ثلاثا/, /اربعا/, /خميس/]; for (let i = 0; i < 5; i++) if (r[i].test(s)) return i; return -1; };
   const ORD = { 'اول':1, 'الاول':1, 'ثاني':2, 'الثاني':2, 'ثالث':3, 'الثالث':3 };
@@ -717,14 +739,20 @@ const CircTT = (function(){
     m = s.match(/(\d)\s*م\s*(\d{1,2})/); if (m) return m[1] + '/' + m[2];
     return '';
   }
-  async function load(){ const d = (await getJSONsafe('tt.json')) || {}; d.cfg = Object.assign({}, DEF, d.cfg || {}); d.by = d.by || {}; return d; }
+  async function load(){ const d = (await getJSONsafe('tt.json')) || {}; const c = d.cfg || {};
+    d.cfg = Object.assign({}, DEF, c); if (!c.sets) d.cfg.sets = JSON.parse(JSON.stringify(DEF.sets)); if (!c.ranges) d.cfg.ranges = DEF_RANGES.slice(); if (!c.holidays) d.cfg.holidays = DEF_HOL.slice();
+    d.by = d.by || {}; return d; }
   async function getJSONsafe(p){ try { return await Circ.getJSON(p); } catch(e){ return null; } }
-  const toMin = hm => { const [h, m] = String(hm || '0:0').split(':').map(Number); return h * 60 + (m || 0); };
   const fmt = hm => { const [h, m] = String(hm).split(':').map(Number); const h12 = ((h + 11) % 12) + 1; return `${h12}:${String(m).padStart(2, '0')}${h < 12 ? 'ص' : 'م'}`; };
   /* الحصة الحالية والتالية لجدول معلم */
-  function nowNext(map, cfg, when){
-    const d = when || new Date(), di = d.getDay(), m = d.getHours() * 60 + d.getMinutes(), P = cfg.periods;
-    const out = { now:null, next:null, day: di <= 4 ? di : -1 };
+  function nowNext(map, cfg0, when){
+    const d = when || new Date(), cfg = eff(cfg0, d), di = d.getDay(), m = d.getHours() * 60 + d.getMinutes(), P = cfg.periods;
+    const out = { now:null, next:null, day: di <= 4 ? di : -1, holiday: cfg.holiday, setName: cfg.setName };
+    if (cfg.holiday){
+      for (let k = 1; k <= 120 && !out.next; k++){ const dd = new Date(d.getFullYear(), d.getMonth(), d.getDate() + k), w = dd.getDay(); if (w > 4 || holidayOn(cfg0, dd)) continue; const PP = eff(cfg0, dd).periods;
+        for (let p = 0; p < PP.length; p++){ const txt = map[w + '-' + (p + 1)]; if (txt){ out.next = { d:w, p:p + 1, t:txt, s:PP[p].s, today:false, date:dd }; break; } } }
+      return out;
+    }
     if (di <= 4){
       for (let p = 0; p < P.length; p++){
         const s = toMin(P[p].s), e = toMin(P[p].e), txt = map[di + '-' + (p + 1)];
@@ -732,22 +760,47 @@ const CircTT = (function(){
         if (!out.next && s > m && txt) out.next = { d:di, p:p + 1, t:txt, s:P[p].s, today:true };
       }
     }
-    if (!out.next) for (let k = 1; k <= 7 && !out.next; k++){ const dd = (di + k) % 7; if (dd > 4) continue; for (let p = 0; p < P.length; p++){ const txt = map[dd + '-' + (p + 1)]; if (txt){ out.next = { d:dd, p:p + 1, t:txt, s:P[p].s, today:false }; break; } } }
+    for (let k = 1; k <= 120 && !out.next; k++){ const dt = new Date(d.getFullYear(), d.getMonth(), d.getDate() + k), dd = dt.getDay(); if (dd > 4 || holidayOn(cfg0, dt)) continue; const PP = eff(cfg0, dt).periods;
+      for (let p = 0; p < PP.length; p++){ const txt = map[dd + '-' + (p + 1)]; if (txt){ out.next = { d:dd, p:p + 1, t:txt, s:PP[p].s, today:false, date:dt }; break; } } }
     return out;
   }
   /* شبكة الجدول (للعرض والطباعة). cell(d,p) → html */
-  function gridHTML(cfg, cell, opt){
-    opt = opt || {}; const days = cfg.days, P = cfg.periods;
+  function gridHTML(cfg0, cell, opt){
+    opt = opt || {}; const cfg = cfg0.sets ? eff(cfg0, opt.date) : cfg0, days = cfg.days, P = cfg.periods;
     return `<table class="ttg${opt.cls ? ' ' + opt.cls : ''}"><thead><tr><th class="dh">اليوم</th>${P.map((p, i) => `<th>الحصة ${i + 1}${opt.times !== false ? `<small>${fmt(p.s)} – ${fmt(p.e)}</small>` : ''}</th>`).join('')}</tr></thead>
       <tbody>${days.map((dn, d) => `<tr class="${opt.today === d ? 'today' : ''}"><th class="dh">${dn}</th>${P.map((_, p) => `<td>${cell(d, p + 1) || ''}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
   }
-  const count = map => Object.values(map || {}).filter(Boolean).length;
+  const count = map => Object.values(map || {}).filter(v => v && !/^منتظر/.test(v)).length;   // النصاب بدون حصص الانتظار
   /* المشمولون بالجدول: تلقائي حسب المسمى، ويمكن تجاوزه لكل منسوب (t.tt = true / false) */
   const EXCL = /وكيل|مدير|موجه|مرشد|رائد|اداري|إداري|سكرتير|مساعد|محضر|امين|أمين|حارس|مستخدم|تربيه خاصه|تربية خاصة|فكري|يسير|صعوبات/;
   const autoIn = t => !EXCL.test(String((t && t.title) || ''));
   const inScope = (t, tt) => t.tt === true || (t.tt !== false && (autoIn(t) || (tt && count((tt.by || {})[t.id]) > 0)));
-  return { DAYS, DEF, digits, dayIdx, classOf, load, nowNext, gridHTML, fmt, toMin, count, autoIn, inScope };
+  return { DAYS, DEF, SETS, gen, eff, iso, holidayOn, digits, dayIdx, classOf, load, nowNext, gridHTML, fmt, toMin, count, autoIn, inScope };
 })();
+
+/* ---------- مطابقة الأسماء الذكية (نور ⇄ قائمة المدرسة) ----------
+   تعيد { t, weak } : weak = تطابق بالاسم الأول والأخير فقط (يحتاج مراجعة) */
+function circNameTokens(n){
+  let v = String(n || '').replace(/[ًٌٍَُِّْـ]/g, '').replace(/[أإآٱ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/^\s*(أ|ا|الاستاذ|استاذ)\s*[\/\.\:]\s*/, '');
+  v = (' ' + v + ' ').replace(/\s+(بن|ابن)\s+/g, ' ').replace(/\s+عبد\s+/g, ' عبد').replace(/\s+ال\s+/g, ' ال').replace(/\s+/g, ' ').trim();
+  return v.split(' ').filter(Boolean).map(w => w.replace(/^ال(?=..)/, '').replace(/يحيي$/, 'يحي').replace(/^(عبد)ال/, '$1').replace(/له$/, 'له'));
+}
+function circNameMatch(name, list){
+  const a = circNameTokens(name); if (a.length < 1) return null;
+  let best = null, bestS = 0, tie = false;
+  for (const t of list){
+    const b = circNameTokens(t.name); if (!b.length) continue;
+    if (a.join(' ') === b.join(' ')) return { t, weak:false };
+    const [sh, lg] = a.length <= b.length ? [a, b] : [b, a];
+    let s = 0;
+    if (a[0] === b[0] && a[a.length - 1] === b[b.length - 1] && sh.every(w => lg.includes(w))) s = 100 + sh.length;     // الأقصر محتوى كاملاً
+    else if (sh.length >= 3 && sh.every((w, i) => lg[i] === w)) s = 90 + sh.length;                                         // بادئة (اسم خامس زائد)
+    else if (a[0] === b[0] && a[a.length - 1] === b[b.length - 1]) s = 10 + sh.filter(w => lg.includes(w)).length;         // الأول والأخير فقط
+    if (s > bestS){ best = t; bestS = s; tie = false; } else if (s && s === bestS) tie = true;
+  }
+  if (!best || tie) return null;
+  return { t: best, weak: bestS < 90 };
+}
 
 </script>
 <script>
@@ -1093,16 +1146,28 @@ async function saveStaffUI(btn){
 const norm = s => s.replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/\s+/g, '').replace(/^عبد/, 'عبد');
 function applyBulk(){
   const lines = $('bulk').value.split('\n').map(l => l.trim()).filter(Boolean);
-  let upd = 0, add = 0;
+  const res = { upd:[], weak:[], add:[], ren:0 };
   lines.forEach(l => {
-    const m = l.match(/(\+?[\d٠-٩][\d٠-٩\s-]{7,})/); const ph = m ? m[1].replace(/[\s-]/g, '') : '';
-    const name = l.replace(m ? m[1] : '', '').replace(/[-–,،\t|:]+/g, ' ').trim();
-    if (!name) return;
-    const t = S.staff.find(x => norm(x.name) === norm(name));
-    if (t){ if (ph){ t.phone = ph; upd++; } }
-    else { S.staff.push({ id: Circ.uid(6), name, phone: ph, token: Circ.uid(12) }); add++; }
+    const m = l.match(/(\+?[\d٠-٩][\d٠-٩\s-]{7,})/); let ph = m ? CircTT.digits(m[1]).replace(/[\s-]/g, '') : '';
+    if (/^\+?966/.test(ph)) ph = '0' + ph.replace(/^\+?966/, '');
+    const parts = l.replace(m ? m[1] : '', '|').split(/\s*[|\t,،]\s*|\s+-\s+|\s+–\s+/).map(x => x.trim()).filter(Boolean);
+    const name = (parts[0] || '').replace(/[-–:]+/g, ' ').trim(), title = parts.slice(1).join(' ').trim();
+    if (!name || name.split(/\s+/).length < 2) return;
+    const r = circNameMatch(name, S.staff);
+    if (r){ const t = r.t;
+      if (ph) t.phone = ph;
+      if (title && !t.title) t.title = title;
+      if (circNameTokens(name).length > circNameTokens(t.name).length && !r.weak){ t.name = name; res.ren++; }
+      (r.weak ? res.weak : res.upd).push([name, t.name, t.id]);
+    } else { S.staff.push({ id: Circ.uid(6), name, phone: ph, title: title || undefined, token: Circ.uid(12) }); res.add.push(name); }
   });
-  renderStaff(); toast(`تم تحديث ${upd} وإضافة ${add} — اضغط «حفظ التعديلات»`);
+  Circ.ensureUsers(S.staff); renderStaff();
+  $('bulkRes').innerHTML = `<div class="card" style="background:#f6fbf9;margin:10px 0 0;padding:12px">
+    <b>النتيجة:</b> طابقتُ <b style="color:#2c7a5c">${res.upd.length}</b> وحدّثت أرقامهم${res.ren ? ` (واكتمل الاسم الرباعي لـ ${res.ren})` : ''}، وأضفت <b>${res.add.length}</b> جديداً.
+    ${res.weak.length ? `<div style="margin-top:8px;color:#8a6116"><b>⚠️ مطابقة تحتاج مراجعة (${res.weak.length}):</b> الاسم الأول والأخير متطابقان فقط — تأكد أنهم نفس الشخص، وإلا عدّل الرقم يدوياً:<br>${res.weak.map(w => `• «${Circ.esc(w[0])}» ← ${Circ.esc(w[1])}`).join('<br>')}</div>` : ''}
+    ${res.add.length ? `<div style="margin-top:8px"><b>أُضيفوا جدداً:</b> ${res.add.map(Circ.esc).join('، ')}</div>` : ''}
+    <div class="muted" style="margin-top:8px">لم يُحفظ شيء بعد — راجع ثم اضغط «💾 حفظ التعديلات».</div></div>`;
+  toast(`تمت مطابقة ${res.upd.length + res.weak.length} وإضافة ${res.add.length} — راجع ثم احفظ`);
 }
 
 /* ---------- الإعلانات ---------- */
@@ -1208,7 +1273,7 @@ let TT = null, TTM = 't', TT_SEL = null, TT_PEND = null;
 async function ttInit(){ if (!TT){ TT = await CircTT.load(); } ttRender(); }
 document.querySelectorAll('#ttModes button').forEach(b => b.onclick = () => { TTM = b.dataset.m; document.querySelectorAll('#ttModes button').forEach(x => x.classList.toggle('on', x === b)); ttRender(); });
 async function ttSave(msg){ TT.updatedAt = new Date().toISOString(); TT.updatedBy = S.me.name; await Circ.putJSON('tt.json', TT); toast(msg || 'تم حفظ الجدول ✅'); }
-const ttHas = id => CircTT.count(TT.by[id]) > 0;
+const ttHas = id => Object.values(TT.by[id] || {}).some(Boolean);
 function ttRender(){
   if (!TT) return;
   const withT = S.staff.filter(t => ttHas(t.id)).length;
@@ -1234,12 +1299,14 @@ function ttRender(){
       <div class="ttwrap">${CircTT.gridHTML(cfg, (d, p) => cls[c][d + '-' + p] || '')}</div>`;
     $('ttC').onchange = e => { TTC = e.target.value; ttRender(); };
   } else if (TTM === 'f'){
-    const now = CircTT.nowNext({}, cfg); const dd = TTF.d != null ? TTF.d : Math.max(0, Math.min(4, new Date().getDay() > 4 ? 0 : new Date().getDay()));
-    const pp = TTF.p || (() => { const m = new Date().getHours() * 60 + new Date().getMinutes(); const i = cfg.periods.findIndex(x => CircTT.toMin(x.e) > m); return i < 0 ? 1 : i + 1; })();
+    const ecfg = CircTT.eff(cfg); const dd = TTF.d != null ? TTF.d : Math.max(0, Math.min(4, new Date().getDay() > 4 ? 0 : new Date().getDay()));
+    const pp = TTF.p || (() => { const m = new Date().getHours() * 60 + new Date().getMinutes(); const i = ecfg.periods.findIndex(x => CircTT.toMin(x.e) > m); return i < 0 ? 1 : i + 1; })();
     TTF = { d:dd, p:pp };
-    const sch = S.staff.filter(t => ttHas(t.id) && CircTT.inScope(t, TT)), free = sch.filter(t => !(TT.by[t.id] || {})[dd + '-' + pp]), busyN = sch.length - free.length;
+    const cellOf = t => (TT.by[t.id] || {})[dd + '-' + pp] || '', isWait = v => /^منتظر/.test(v);
+    const sch = S.staff.filter(t => ttHas(t.id) && CircTT.inScope(t, TT)), waitT = sch.filter(t => isWait(cellOf(t))).sort((a, b) => cellOf(a).localeCompare(cellOf(b), 'ar', { numeric:true })), free = sch.filter(t => !cellOf(t)), busyN = sch.length - free.length - waitT.length;
     V.innerHTML = `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px"><select id="ttFd" style="flex:1">${cfg.days.map((n, i) => `<option value="${i}" ${i === dd ? 'selected' : ''}>${n}</option>`).join('')}</select>
-        <select id="ttFp" style="flex:1">${cfg.periods.map((x, i) => `<option value="${i + 1}" ${i + 1 === pp ? 'selected' : ''}>الحصة ${i + 1} (${CircTT.fmt(x.s)})</option>`).join('')}</select></div>
+        <select id="ttFp" style="flex:1">${ecfg.periods.map((x, i) => `<option value="${i + 1}" ${i + 1 === pp ? 'selected' : ''}>الحصة ${i + 1} (${CircTT.fmt(x.s)})</option>`).join('')}</select></div>
+      ${waitT.length ? `<div class="card" style="background:#fdf3e7;border-color:#f0c9a0;margin:0 0 10px;padding:12px"><b>⏳ المنتظرون المعيّنون في هذه الحصة (حسب الجدول):</b>${waitT.map(t => `<div class="row-t"><div class="n">${Circ.esc(t.name)}<small>${Circ.esc(cellOf(t))}</small></div>${t.phone ? `<div class="acts"><a class="btn wa sm" target="_blank" href="${Circ.wa(t.phone, `السلام عليكم أ. ${t.name}\nنأمل تغطية حصة انتظار: ${cfg.days[dd]} — الحصة ${pp}`)}">📲 تكليف</a></div>` : ''}</div>`).join('')}</div>` : ''}
       <div class="stats" style="margin-bottom:10px"><div class="stat"><b style="color:#2c7a5c">${free.length}</b><span>متفرّغ</span></div><div class="stat"><b>${busyN}</b><span>لديه حصة</span></div><div class="stat"><b>${S.staff.filter(t => CircTT.inScope(t, TT) && !ttHas(t.id)).length}</b><span>مشمول بلا جدول</span></div></div>
       ${free.length ? free.map(t => `<div class="row-t"><div class="n">${Circ.esc(t.name)}<small>${Circ.esc(t.title || '')} · نصابه ${CircTT.count(TT.by[t.id])} حصة · حصصه هذا اليوم ${Object.keys(TT.by[t.id] || {}).filter(k => k.startsWith(dd + '-') && TT.by[t.id][k]).length}</small></div>${t.phone ? `<div class="acts"><a class="btn wa sm" target="_blank" href="${Circ.wa(t.phone, `السلام عليكم أ. ${t.name}\nنأمل تغطية حصة انتظار: ${cfg.days[dd]} — الحصة ${pp}`)}">📲 تكليف انتظار</a></div>` : ''}</div>`).join('') : '<p class="muted">لا يوجد متفرّغ في هذه الحصة.</p>'}`;
     $('ttFd').onchange = e => { TTF.d = +e.target.value; ttRender(); }; $('ttFp').onchange = e => { TTF.p = +e.target.value; ttRender(); };
@@ -1253,11 +1320,41 @@ function ttRender(){
       <div class="toolbar"><button class="btn g sm" onclick="ttSaveScope(this)">💾 حفظ</button><button class="btn ghost sm" onclick="ttScopeAuto(this)">↺ إرجاع الجميع للتلقائي</button></div>`;
     ttScopeFilter();
   } else {
-    V.innerHTML = `<p class="muted" style="font-size:.85rem;margin-bottom:8px">تُستخدم لإظهار «حصتك الآن / التالية» للمعلم. عدّلها حسب توقيت مدرستك.</p>
-      <div id="ttPer">${cfg.periods.map((x, i) => `<div class="row-t"><span class="num">${i + 1}</span><div class="n">الحصة ${i + 1}</div><input type="time" value="${x.s}" data-i="${i}" data-k="s" style="width:130px"><span>إلى</span><input type="time" value="${x.e}" data-i="${i}" data-k="e" style="width:130px"></div>`).join('')}</div>
-      <div class="toolbar"><button class="btn ghost sm" onclick="ttPeriods(1)">➕ حصة</button><button class="btn ghost sm" onclick="ttPeriods(-1)">➖ حصة</button><button class="btn g sm" onclick="ttSavePeriods(this)">💾 حفظ المواعيد</button></div>`;
+    const E = CircTT.eff(cfg), SET = TTS || E.set, P = cfg.sets[SET], hj = v => v ? Circ.hijri(new Date(v + 'T12:00')) : '';
+    const g = CircTT.SETS[SET];
+    V.innerHTML = `
+      <div class="card" style="background:#f4f8f7;margin:0 0 12px;padding:14px">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><b>التوقيت المطبّق اليوم:</b><span class="badge ok" style="font-size:.85rem">${E.setName}${cfg.mode === 'auto' ? ' (تلقائي حسب التاريخ)' : ' (يدوي)'}</span>${E.holiday ? `<span class="badge wait">🌴 ${Circ.esc(E.holiday.n)}</span>` : ''}</div>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap"><span class="muted" style="font-size:.85rem">طريقة التطبيق:</span>
+          <select id="ttMode" style="width:auto;min-width:220px"><option value="auto" ${cfg.mode === 'auto' ? 'selected' : ''}>🔄 تلقائي حسب فترات التقويم</option>${Object.entries(CircTT.SETS).map(([k, v]) => `<option value="${k}" ${cfg.mode === k ? 'selected' : ''}>${v.n} دائماً</option>`).join('')}</select></div>
+      </div>
+      <div class="chips" id="ttSets">${Object.entries(CircTT.SETS).map(([k, v]) => `<button data-s="${k}" class="${k === SET ? 'on' : ''}">${v.n}</button>`).join('')}</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0;font-size:.85rem"><span class="muted">توليد سريع:</span> الحصة الأولى <input type="time" id="gFirst" value="${P[0].s}" style="width:120px"> مدة الحصة <input type="number" id="gLen" value="${g.len}" min="30" max="60" style="width:70px"> د · الفسحة <input type="number" id="gBrk" value="${g.brk}" min="0" max="40" style="width:65px"> د · الصلاة <input type="number" id="gPray" value="${g.pray}" min="0" max="40" style="width:65px"> د <button class="btn ghost sm" onclick="ttGen()">⚡ توليد</button></div>
+      <div id="ttPer">${P.map((x, i) => `<div class="row-t"><span class="num">${i + 1}</span><div class="n">الحصة ${i + 1}</div><input type="time" value="${x.s}" data-i="${i}" data-k="s" style="width:130px"><span>إلى</span><input type="time" value="${x.e}" data-i="${i}" data-k="e" style="width:130px"></div>`).join('')}</div>
+      <div class="toolbar"><button class="btn ghost sm" onclick="ttPeriods(1)">➕ حصة</button><button class="btn ghost sm" onclick="ttPeriods(-1)">➖ حصة</button></div>
+      <h3 style="margin:16px 0 6px;font-size:.98rem;color:var(--n)">📅 فترات التوقيت (التطبيق التلقائي)</h3>
+      <div id="ttRanges">${cfg.ranges.map((r, i) => `<div class="row-t" style="flex-wrap:wrap"><select data-i="${i}" data-k="set" style="width:auto">${Object.entries(CircTT.SETS).map(([k, v]) => `<option value="${k}" ${r.set === k ? 'selected' : ''}>${v.n}</option>`).join('')}</select>
+        من <input type="date" value="${r.from}" data-i="${i}" data-k="from" style="width:auto"><small class="muted">${hj(r.from)}</small> إلى <input type="date" value="${r.to}" data-i="${i}" data-k="to" style="width:auto"><small class="muted">${hj(r.to)}</small><button class="btn ghost sm" style="color:var(--red)" onclick="TT.cfg.ranges.splice(${i},1);ttRender()">✕</button></div>`).join('')}</div>
+      <button class="btn ghost sm" style="margin-top:6px" onclick="ttReadForm();TT.cfg.ranges.push({set:'summer',from:CircTT.iso(new Date()),to:CircTT.iso(new Date())});ttRender()">➕ فترة</button>
+      <h3 style="margin:16px 0 6px;font-size:.98rem;color:var(--n)">🌴 الإجازات (لا تُعرض فيها حصص، ويظهر للمعلم موعد العودة)</h3>
+      <div id="ttHol">${cfg.holidays.map((h, i) => `<div class="row-t" style="flex-wrap:wrap"><input type="text" value="${Circ.esc(h.n)}" data-i="${i}" data-k="n" style="flex:1;min-width:150px">
+        من <input type="date" value="${h.from}" data-i="${i}" data-k="from" style="width:auto"><small class="muted">${hj(h.from)}</small> إلى <input type="date" value="${h.to}" data-i="${i}" data-k="to" style="width:auto"><small class="muted">${hj(h.to)}</small><button class="btn ghost sm" style="color:var(--red)" onclick="TT.cfg.holidays.splice(${i},1);ttRender()">✕</button></div>`).join('')}</div>
+      <div class="toolbar"><button class="btn ghost sm" onclick="ttReadForm();TT.cfg.holidays.push({n:'إجازة',from:CircTT.iso(new Date()),to:CircTT.iso(new Date())});ttRender()">➕ إجازة</button><button class="btn ghost sm" onclick="ttResetCal()">↺ استعادة تقويم تعليم جدة 1448</button></div>
+      <p class="muted" style="font-size:.78rem;margin-top:8px">المواعيد والإجازات معبّأة مسبقاً حسب ما أعلنته إدارة تعليم جدة والتقويم الدراسي 1448–1449هـ في الصحف المحلية، وقد تتغيّر بتعاميم لاحقة — راجعها وعدّلها عند صدور أي تعميم.</p>
+      <button class="btn g" style="width:100%;margin-top:12px" onclick="ttSavePeriods(this)">💾 حفظ المواعيد والتقويم</button>`;
+    $('ttSets').querySelectorAll('button').forEach(b => b.onclick = () => { ttReadForm(); TTS = b.dataset.s; ttRender(); });
+    $('ttMode').onchange = e => { ttReadForm(); TT.cfg.mode = e.target.value; ttRender(); };
   }
 }
+let TTS = null;
+function ttReadForm(){
+  const c = TT.cfg, k = TTS || CircTT.eff(c).set;
+  $('ttPer') && $('ttPer').querySelectorAll('input').forEach(i => c.sets[k][i.dataset.i][i.dataset.k] = i.value);
+  $('ttRanges') && $('ttRanges').querySelectorAll('[data-k]').forEach(i => c.ranges[i.dataset.i][i.dataset.k] = i.value);
+  $('ttHol') && $('ttHol').querySelectorAll('[data-k]').forEach(i => c.holidays[i.dataset.i][i.dataset.k] = i.value.trim());
+}
+function ttGen(){ const k = TTS || CircTT.eff(TT.cfg).set; TT.cfg.sets[k] = CircTT.gen($('gFirst').value, TT.cfg.sets[k].length, +$('gLen').value, +$('gBrk').value, +$('gPray').value); ttRender(); toast('تم توليد المواعيد — اضغط حفظ'); }
+function ttResetCal(){ if (!confirm('استعادة فترات التوقيت والإجازات حسب تقويم تعليم جدة 1448؟')) return; TT.cfg.ranges = JSON.parse(JSON.stringify(CircTT.DEF.ranges)); TT.cfg.holidays = JSON.parse(JSON.stringify(CircTT.DEF.holidays)); TT.cfg.mode = 'auto'; ttRender(); }
 let TTC = null, TTF = {};
 function ttScopeFilter(){ const q = ($('ttIq').value || '').trim(); $('ttIn').querySelectorAll('label').forEach(l => l.style.display = !q || l.dataset.q.includes(q) ? '' : 'none'); }
 async function ttSaveScope(btn){
@@ -1268,8 +1365,9 @@ async function ttSaveScope(btn){
   });
 }
 async function ttScopeAuto(btn){ if (!confirm('إرجاع جميع المنسوبين للتحديد التلقائي حسب المسمى؟')) return; await busy(btn, async () => { S.staff.forEach(t => delete t.tt); await Circ.saveStaff(S.staff); ttRender(); }); }
-function ttPeriods(n){ const P = TT.cfg.periods; if (n > 0 && P.length < 9){ const l = P[P.length - 1]; const e = CircTT.toMin(l.e); const f = m => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); P.push({ s:l.e, e:f(e + 45) }); } if (n < 0 && P.length > 4) P.pop(); ttRender(); }
-async function ttSavePeriods(btn){ await busy(btn, async () => { $('ttPer').querySelectorAll('input').forEach(i => TT.cfg.periods[i.dataset.i][i.dataset.k] = i.value); await ttSave('تم حفظ مواعيد الحصص ✅'); }); }
+function ttPeriods(n){ if ($('ttPer')) ttReadForm(); const f = m => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
+  Object.values(TT.cfg.sets).concat([TT.cfg.periods]).forEach(P => { if (n > 0 && P.length < 9){ const l = P[P.length - 1]; P.push({ s:l.e, e:f(CircTT.toMin(l.e) + 45) }); } if (n < 0 && P.length > 4) P.pop(); }); ttRender(); }
+async function ttSavePeriods(btn){ await busy(btn, async () => { ttReadForm(); await ttSave('تم حفظ المواعيد والتقويم ✅'); ttRender(); }); }
 async function ttSaveTeacher(btn){
   await busy(btn, async () => { const m = {}; $('ttView').querySelectorAll('input[data-k]').forEach(i => { const v = i.value.trim(); if (v) m[i.dataset.k] = v; }); if (Object.keys(m).length) TT.by[TT_SEL] = m; else delete TT.by[TT_SEL]; await ttSave(); ttRender(); });
 }
@@ -1285,18 +1383,7 @@ function ttPrint(kind){
 
 /* ---------- الاستيراد الذكي ---------- */
 const ttN = v => CircTT.digits(v).replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/[ًٌٍَُِّْـ]/g, '').replace(/^(ا|الاستاذ|استاذ|الأستاذ|أ)\s*[\/\.\:]\s*/,'').replace(/\s+بن\s+/g, ' ').replace(/عبد\s+/g, 'عبد').replace(/\s+/g, ' ').trim();
-function ttMatch(name){
-  const a = ttN(name).split(' '); if (a.length < 2) return null; let best = null;
-  for (const t of S.staff){
-    const b = ttN(t.name).split(' ');
-    if (a.join(' ') === b.join(' ')) return t;
-    const [sh, lg] = a.length <= b.length ? [a, b] : [b, a];
-    if (a[0] === b[0] && a[a.length - 1] === b[b.length - 1] && sh.every(w => lg.includes(w))) best = best || t;
-  }
-  if (best) return best;
-  const c = S.staff.filter(t => { const b = ttN(t.name).split(' '); return a[0] === b[0] && a[a.length - 1] === b[b.length - 1]; });
-  return c.length === 1 ? c[0] : null;
-}
+function ttMatch(name){ const r = circNameMatch(name, S.staff); return r ? r.t : null; }
 const isName = v => { const s = String(v || '').trim(); return /[؀-ۿ]/.test(s) && s.split(/\s+/).length >= 2 && CircTT.dayIdx(s) < 0 && !/\d/.test(CircTT.digits(s).replace(/\s/g, '').slice(0, 2)); };
 const cellTxt = v => String(v == null ? '' : v).replace(/\r?\n/g, ' ').replace(/\s+/g, ' ').trim();
 /* يحوّل ورقة (مصفوفة صفوف) إلى { اسم: { 'd-p': نص } } */

@@ -518,7 +518,28 @@ function circHasPerm(t, p){ const a = (t && t.perms) || []; return a.includes('a
    ===================================================================== */
 const CircTT = (function(){
   const DAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس'];
-  const DEF = { days: DAYS.slice(), periods: [['07:00','07:45'],['07:45','08:30'],['08:30','09:15'],['09:40','10:25'],['10:25','11:10'],['11:30','12:15'],['12:15','13:00']].map(([s, e]) => ({ s, e })) };
+  const toMin = hm => { const [h, m] = String(hm || '0:0').split(':').map(Number); return h * 60 + (m || 0); };
+  const f2 = m => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
+  /* توليد مواعيد الحصص من بداية الحصة الأولى: طول الحصة، فسحة بعد الحصة 3، صلاة بعد الحصة 5 */
+  function gen(first, n, len, brk, pray){ const out = []; let m = toMin(first); for (let i = 1; i <= n; i++){ out.push({ s:f2(m), e:f2(m + len) }); m += len; if (i === 3) m += brk; if (i === 5) m += pray; } return out; }
+  /* توقيت تعليم جدة 1448–1449هـ (حسب الإعلانات المنشورة — قابلة للتعديل) */
+  const SETS = { summer:{ n:'☀️ صيفي', first:'07:00', len:45, brk:25, pray:20 }, winter:{ n:'❄️ شتوي', first:'07:30', len:45, brk:25, pray:20 }, ramadan:{ n:'🌙 رمضان', first:'09:00', len:35, brk:15, pray:0 } };
+  const DEF_RANGES = [ { set:'summer', from:'2026-08-30', to:'2026-10-25' }, { set:'winter', from:'2026-10-26', to:'2027-02-07' }, { set:'ramadan', from:'2027-02-08', to:'2027-03-13' }, { set:'summer', from:'2027-03-14', to:'2027-07-01' } ];
+  const DEF_HOL = [
+    { n:'إجازة الخريف', from:'2026-11-20', to:'2026-11-28' },
+    { n:'إجازة منتصف العام', from:'2027-01-08', to:'2027-01-16' },
+    { n:'إجازة يوم التأسيس', from:'2027-02-19', to:'2027-02-22' },
+    { n:'إجازة عيد الفطر', from:'2027-02-26', to:'2027-03-13' },
+    { n:'إجازة عيد الأضحى', from:'2027-04-30', to:'2027-05-22' },
+    { n:'الإجازة الصيفية', from:'2027-07-02', to:'2027-08-28' } ];
+  const DEF = { days: DAYS.slice(), mode:'auto', periods: gen('07:00', 7, 45, 25, 20),
+    sets: { summer: gen('07:00', 7, 45, 25, 20), winter: gen('07:30', 7, 45, 25, 20), ramadan: gen('09:00', 7, 35, 15, 0) },
+    ranges: DEF_RANGES, holidays: DEF_HOL };
+  const iso = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  const holidayOn = (cfg, d) => (cfg.holidays || []).find(h => h.from && h.to && iso(d) >= h.from && iso(d) <= h.to) || null;
+  function setFor(cfg, d){ if (cfg.mode && cfg.mode !== 'auto') return cfg.mode; const r = (cfg.ranges || []).find(r => iso(d) >= r.from && iso(d) <= r.to); return r ? r.set : 'summer'; }
+  /* الإعدادات الفعلية ليوم معيّن: المواعيد حسب الموسم + الإجازة إن وُجدت */
+  function eff(cfg, d){ d = d || new Date(); const k = setFor(cfg, d), P = (cfg.sets && cfg.sets[k]) || cfg.periods; return Object.assign({}, cfg, { periods: P, set: k, setName: SETS[k] ? SETS[k].n : k, holiday: holidayOn(cfg, d) }); }
   const digits = v => String(v == null ? '' : v).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
   const dayIdx = v => { const s = digits(v).replace(/[أإآ]/g, 'ا'); const r = [/احد/, /اثنين|اتنين/, /ثلاثا/, /اربعا/, /خميس/]; for (let i = 0; i < 5; i++) if (r[i].test(s)) return i; return -1; };
   const ORD = { 'اول':1, 'الاول':1, 'ثاني':2, 'الثاني':2, 'ثالث':3, 'الثالث':3 };
@@ -529,14 +550,20 @@ const CircTT = (function(){
     m = s.match(/(\d)\s*م\s*(\d{1,2})/); if (m) return m[1] + '/' + m[2];
     return '';
   }
-  async function load(){ const d = (await getJSONsafe('tt.json')) || {}; d.cfg = Object.assign({}, DEF, d.cfg || {}); d.by = d.by || {}; return d; }
+  async function load(){ const d = (await getJSONsafe('tt.json')) || {}; const c = d.cfg || {};
+    d.cfg = Object.assign({}, DEF, c); if (!c.sets) d.cfg.sets = JSON.parse(JSON.stringify(DEF.sets)); if (!c.ranges) d.cfg.ranges = DEF_RANGES.slice(); if (!c.holidays) d.cfg.holidays = DEF_HOL.slice();
+    d.by = d.by || {}; return d; }
   async function getJSONsafe(p){ try { return await Circ.getJSON(p); } catch(e){ return null; } }
-  const toMin = hm => { const [h, m] = String(hm || '0:0').split(':').map(Number); return h * 60 + (m || 0); };
   const fmt = hm => { const [h, m] = String(hm).split(':').map(Number); const h12 = ((h + 11) % 12) + 1; return `${h12}:${String(m).padStart(2, '0')}${h < 12 ? 'ص' : 'م'}`; };
   /* الحصة الحالية والتالية لجدول معلم */
-  function nowNext(map, cfg, when){
-    const d = when || new Date(), di = d.getDay(), m = d.getHours() * 60 + d.getMinutes(), P = cfg.periods;
-    const out = { now:null, next:null, day: di <= 4 ? di : -1 };
+  function nowNext(map, cfg0, when){
+    const d = when || new Date(), cfg = eff(cfg0, d), di = d.getDay(), m = d.getHours() * 60 + d.getMinutes(), P = cfg.periods;
+    const out = { now:null, next:null, day: di <= 4 ? di : -1, holiday: cfg.holiday, setName: cfg.setName };
+    if (cfg.holiday){
+      for (let k = 1; k <= 120 && !out.next; k++){ const dd = new Date(d.getFullYear(), d.getMonth(), d.getDate() + k), w = dd.getDay(); if (w > 4 || holidayOn(cfg0, dd)) continue; const PP = eff(cfg0, dd).periods;
+        for (let p = 0; p < PP.length; p++){ const txt = map[w + '-' + (p + 1)]; if (txt){ out.next = { d:w, p:p + 1, t:txt, s:PP[p].s, today:false, date:dd }; break; } } }
+      return out;
+    }
     if (di <= 4){
       for (let p = 0; p < P.length; p++){
         const s = toMin(P[p].s), e = toMin(P[p].e), txt = map[di + '-' + (p + 1)];
@@ -544,22 +571,47 @@ const CircTT = (function(){
         if (!out.next && s > m && txt) out.next = { d:di, p:p + 1, t:txt, s:P[p].s, today:true };
       }
     }
-    if (!out.next) for (let k = 1; k <= 7 && !out.next; k++){ const dd = (di + k) % 7; if (dd > 4) continue; for (let p = 0; p < P.length; p++){ const txt = map[dd + '-' + (p + 1)]; if (txt){ out.next = { d:dd, p:p + 1, t:txt, s:P[p].s, today:false }; break; } } }
+    for (let k = 1; k <= 120 && !out.next; k++){ const dt = new Date(d.getFullYear(), d.getMonth(), d.getDate() + k), dd = dt.getDay(); if (dd > 4 || holidayOn(cfg0, dt)) continue; const PP = eff(cfg0, dt).periods;
+      for (let p = 0; p < PP.length; p++){ const txt = map[dd + '-' + (p + 1)]; if (txt){ out.next = { d:dd, p:p + 1, t:txt, s:PP[p].s, today:false, date:dt }; break; } } }
     return out;
   }
   /* شبكة الجدول (للعرض والطباعة). cell(d,p) → html */
-  function gridHTML(cfg, cell, opt){
-    opt = opt || {}; const days = cfg.days, P = cfg.periods;
+  function gridHTML(cfg0, cell, opt){
+    opt = opt || {}; const cfg = cfg0.sets ? eff(cfg0, opt.date) : cfg0, days = cfg.days, P = cfg.periods;
     return `<table class="ttg${opt.cls ? ' ' + opt.cls : ''}"><thead><tr><th class="dh">اليوم</th>${P.map((p, i) => `<th>الحصة ${i + 1}${opt.times !== false ? `<small>${fmt(p.s)} – ${fmt(p.e)}</small>` : ''}</th>`).join('')}</tr></thead>
       <tbody>${days.map((dn, d) => `<tr class="${opt.today === d ? 'today' : ''}"><th class="dh">${dn}</th>${P.map((_, p) => `<td>${cell(d, p + 1) || ''}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
   }
-  const count = map => Object.values(map || {}).filter(Boolean).length;
+  const count = map => Object.values(map || {}).filter(v => v && !/^منتظر/.test(v)).length;   // النصاب بدون حصص الانتظار
   /* المشمولون بالجدول: تلقائي حسب المسمى، ويمكن تجاوزه لكل منسوب (t.tt = true / false) */
   const EXCL = /وكيل|مدير|موجه|مرشد|رائد|اداري|إداري|سكرتير|مساعد|محضر|امين|أمين|حارس|مستخدم|تربيه خاصه|تربية خاصة|فكري|يسير|صعوبات/;
   const autoIn = t => !EXCL.test(String((t && t.title) || ''));
   const inScope = (t, tt) => t.tt === true || (t.tt !== false && (autoIn(t) || (tt && count((tt.by || {})[t.id]) > 0)));
-  return { DAYS, DEF, digits, dayIdx, classOf, load, nowNext, gridHTML, fmt, toMin, count, autoIn, inScope };
+  return { DAYS, DEF, SETS, gen, eff, iso, holidayOn, digits, dayIdx, classOf, load, nowNext, gridHTML, fmt, toMin, count, autoIn, inScope };
 })();
+
+/* ---------- مطابقة الأسماء الذكية (نور ⇄ قائمة المدرسة) ----------
+   تعيد { t, weak } : weak = تطابق بالاسم الأول والأخير فقط (يحتاج مراجعة) */
+function circNameTokens(n){
+  let v = String(n || '').replace(/[ًٌٍَُِّْـ]/g, '').replace(/[أإآٱ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/^\s*(أ|ا|الاستاذ|استاذ)\s*[\/\.\:]\s*/, '');
+  v = (' ' + v + ' ').replace(/\s+(بن|ابن)\s+/g, ' ').replace(/\s+عبد\s+/g, ' عبد').replace(/\s+ال\s+/g, ' ال').replace(/\s+/g, ' ').trim();
+  return v.split(' ').filter(Boolean).map(w => w.replace(/^ال(?=..)/, '').replace(/يحيي$/, 'يحي').replace(/^(عبد)ال/, '$1').replace(/له$/, 'له'));
+}
+function circNameMatch(name, list){
+  const a = circNameTokens(name); if (a.length < 1) return null;
+  let best = null, bestS = 0, tie = false;
+  for (const t of list){
+    const b = circNameTokens(t.name); if (!b.length) continue;
+    if (a.join(' ') === b.join(' ')) return { t, weak:false };
+    const [sh, lg] = a.length <= b.length ? [a, b] : [b, a];
+    let s = 0;
+    if (a[0] === b[0] && a[a.length - 1] === b[b.length - 1] && sh.every(w => lg.includes(w))) s = 100 + sh.length;     // الأقصر محتوى كاملاً
+    else if (sh.length >= 3 && sh.every((w, i) => lg[i] === w)) s = 90 + sh.length;                                         // بادئة (اسم خامس زائد)
+    else if (a[0] === b[0] && a[a.length - 1] === b[b.length - 1]) s = 10 + sh.filter(w => lg.includes(w)).length;         // الأول والأخير فقط
+    if (s > bestS){ best = t; bestS = s; tie = false; } else if (s && s === bestS) tie = true;
+  }
+  if (!best || tie) return null;
+  return { t: best, weak: bestS < 90 };
+}
 
 </script>
 <script>
