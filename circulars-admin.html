@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>لوحة إدارة المدرسة | متوسطة مكة المكرمة</title>
+<link rel="icon" href="icon-192.png">
+<link rel="stylesheet" href="circulars.css">
+</head>
+<body>
+<header class="hdr">
+  <div class="row"><img src="moe-logo-white.png" alt="وزارة التعليم"><div class="sep"></div><h1>الإدارة العامة للتعليم بمحافظة جدة</h1></div>
+  <div class="pill">لوحة إدارة المدرسة</div>
+  <a href="index.html" style="position:absolute;top:14px;right:16px;color:#fff;font-weight:700;text-decoration:none;opacity:.85;font-size:.9rem">→ البوابة</a>
+</header>
+
+<main class="wrap">
+  <!-- الدخول -->
+  <section id="vLogin" class="login card center">
+    <h2 style="justify-content:center">🔐 دخول إدارة المدرسة</h2>
+    <p class="muted" style="margin-bottom:12px">أدخل رمز الدخول</p>
+    <input id="pin" type="password" inputmode="numeric" placeholder="••••" style="text-align:center;font-size:1.4rem;letter-spacing:6px">
+    <button class="btn g" style="width:100%;margin-top:12px" onclick="login()">دخول</button>
+    <p id="demoNote" class="muted hide" style="margin-top:12px"><span class="badge demo">وضع التجربة</span> البيانات محفوظة على هذا الجهاز فقط. الرمز الافتراضي: 1448</p>
+  </section>
+
+  <section id="vApp" class="hide">
+    <div class="tabs">
+      <button data-t="tCirc" class="on">📄 التعاميم</button>
+      <button data-t="tNews">📢 الإعلانات</button>
+      <button data-t="tStaff">👥 المنسوبون</button>
+      <button data-t="tSet">⚙️ الإعدادات</button>
+    </div>
+
+    <!-- التعاميم -->
+    <div id="tCirc">
+      <div id="circList">
+        <div class="card">
+          <h2><span class="dot"></span>تعميم جديد</h2>
+          <div class="grid">
+            <div><label class="f">رقم التعميم</label><input id="cNum" type="text" placeholder="مثال: 125"></div>
+            <div><label class="f">تاريخ التعميم</label><input id="cDate" type="text"></div>
+          </div>
+          <div style="margin-top:12px"><label class="f">عنوان التعميم</label><input id="cTitle" type="text" placeholder="مثال: السلوك الوظيفي وأخلاقيات مهنة التعليم"></div>
+          <div style="margin-top:12px"><label class="f">ملف التعميم (PDF أو صورة)</label><input id="cFile" type="file" accept="application/pdf,image/*"></div>
+          <button class="btn g" style="margin-top:14px;width:100%" onclick="addCircular(this)">➕ إضافة التعميم وتجهيز الإرسال</button>
+        </div>
+        <div class="card">
+          <h2><span class="dot"></span>التعاميم السابقة</h2>
+          <div id="circs"><p class="muted">لا توجد تعاميم بعد.</p></div>
+        </div>
+      </div>
+
+      <!-- تفاصيل تعميم -->
+      <div id="circView" class="hide">
+        <button class="btn ghost sm" onclick="backToList()">→ رجوع للتعاميم</button>
+        <div class="card" style="margin-top:12px">
+          <div class="muted" id="dMeta"></div>
+          <h2 id="dTitle" style="margin:6px 0 4px"></h2>
+          <div class="prog"><i id="dProg" style="width:0"></i></div>
+          <div class="stats">
+            <div class="stat"><b id="sSigned">0</b><span>وقّعوا</span></div>
+            <div class="stat"><b id="sPending">0</b><span>لم يوقّعوا</span></div>
+            <div class="stat"><b id="sSent">0</b><span>أُرسل لهم</span></div>
+          </div>
+          <div class="toolbar">
+            <button class="btn wa" onclick="sendNext()">📲 إرسال للتالي</button>
+            <button class="btn" onclick="printSheet()">🖨️ كشف الاطلاع PDF</button>
+            <button class="btn ghost" onclick="sendSummary()">📊 ملخص للمدير</button>
+            <button class="btn ghost" onclick="openCircular()">👁️ عرض التعميم</button>
+            <button class="btn ghost" onclick="refresh()">🔄 تحديث</button>
+          </div>
+          <p class="muted" style="margin-top:8px">«إرسال للتالي» يفتح الواتساب لأول معلم لم يوقّع ولم تُرسل له بعد، واحد تلو الآخر.</p>
+        </div>
+        <div class="card">
+          <div class="chips" id="chips">
+            <button data-f="all" class="on">الكل</button>
+            <button data-f="pending">لم يوقّع</button>
+            <button data-f="signed">وقّع</button>
+            <button data-f="unsent">لم يُرسل له</button>
+          </div>
+          <input id="q" type="text" placeholder="🔍 بحث بالاسم" oninput="renderRows()">
+          <div id="rows" style="margin-top:8px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- الإعلانات -->
+    <div id="tNews" class="hide">
+      <div class="card">
+        <h2><span class="dot"></span>إعلان أو فعالية جديدة</h2>
+        <div class="grid">
+          <div><label class="f">النوع</label><select id="nType"><option value="news">📢 إعلان</option><option value="event">📅 فعالية (تظهر في القادمة)</option><option value="alert">⚠️ هام</option><option value="honor">🏆 تكريم</option></select></div>
+          <div><label class="f">التاريخ</label><input id="nDate" type="date"></div>
+        </div>
+        <div style="margin-top:12px"><label class="f">العنوان</label><input id="nTitle" type="text" placeholder="مثال: بدء اختبارات الفترة الثانية"></div>
+        <div style="margin-top:12px"><label class="f">التفاصيل (اختياري)</label><textarea id="nBody"></textarea></div>
+        <label class="check" style="margin-top:12px"><input type="checkbox" id="nPin"><span>📌 تثبيت في أعلى الإعلانات</span></label>
+        <button class="btn g" style="margin-top:14px;width:100%" onclick="addNews(this)">نشر في البوابة</button>
+      </div>
+      <div class="card">
+        <h2><span class="dot"></span>المنشور حالياً</h2>
+        <div id="newsRows"><p class="muted">لا يوجد</p></div>
+      </div>
+    </div>
+
+    <!-- المنسوبون -->
+    <div id="tStaff" class="hide">
+      <div class="card">
+        <h2><span class="dot"></span>أرقام الجوالات دفعة واحدة</h2>
+        <p class="muted" style="margin-bottom:8px">الصق سطراً لكل معلم بصيغة: <b>الاسم - الجوال</b> (أو انسخ عمودين من Excel). يُطابق النظام بالاسم، ويُضاف من لا يوجد في القائمة.</p>
+        <textarea id="bulk" placeholder="سعد سالم الزهراني - 0550000000"></textarea>
+        <button class="btn g" style="margin-top:10px" onclick="applyBulk()">تطبيق</button>
+      </div>
+      <div class="card">
+        <h2><span class="dot"></span>قائمة المنسوبين <span class="muted" id="staffCount"></span></h2>
+        <div id="staffRows"></div>
+        <div class="toolbar">
+          <button class="btn ghost" onclick="addStaff()">➕ إضافة منسوب</button>
+          <button class="btn g" onclick="saveStaffUI(this)">💾 حفظ التعديلات</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- الإعدادات -->
+    <div id="tSet" class="hide">
+      <div class="card">
+        <h2><span class="dot"></span>بيانات المدرسة والمدير</h2>
+        <div class="grid">
+          <div><label class="f">اسم المدرسة</label><input id="sSchool" type="text"></div>
+          <div><label class="f">اسم مدير المدرسة</label><input id="sPName" type="text"></div>
+          <div><label class="f">جوال المدير (لاستلام نسخ التواقيع)</label><input id="sPPhone" type="tel" placeholder="05xxxxxxxx"></div>
+          <div><label class="f">رمز دخول جديد (اتركه فارغاً لعدم التغيير)</label><input id="sPin" type="password" inputmode="numeric"></div>
+        </div>
+        <button class="btn g" style="margin-top:14px" onclick="saveSettings(this)">💾 حفظ الإعدادات</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="printArea"></div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="circulars-core.js"></script>
+<script>
+if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+const $ = id => document.getElementById(id);
+const S = { settings:null, staff:[], circs:[], cur:null, sigs:{}, sent:{}, filter:'all' };
+
+function toast(m){ const t = $('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2600); }
+async function busy(btn, fn){ const o = btn && btn.innerHTML; if (btn){ btn.disabled = true; btn.innerHTML = '⏳ جارٍ...'; } try { await fn(); } catch(e){ alert(e.message || e); } finally { if (btn){ btn.disabled = false; btn.innerHTML = o; } } }
+
+/* ---------- الدخول ---------- */
+async function login(){
+  const pin = $('pin').value.trim(); if (!pin) return;
+  const s = await Circ.settings();
+  const ok = s.pinHash ? (await Circ.sha(pin)) === s.pinHash : pin === CIRC_CONFIG.DEFAULT_PIN;
+  if (!ok){ toast('رمز الدخول غير صحيح'); return; }
+  sessionStorage.setItem('circ_ok', '1');
+  start();
+}
+$('pin').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+async function start(){
+  $('vLogin').classList.add('hide'); $('vApp').classList.remove('hide');
+  S.settings = await Circ.settings();
+  S.staff = await Circ.staff();
+  $('cDate').value = Circ.hijri();
+  fillSettings(); renderStaff(); loadNews(); await loadCircs();
+  const c = new URLSearchParams(location.search).get('c'); if (c) openView(c);
+}
+if (Circ.DEMO) $('demoNote').classList.remove('hide');
+if (sessionStorage.getItem('circ_ok')) start();
+
+/* ---------- التبويبات ---------- */
+document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x === b));
+  ['tCirc','tNews','tStaff','tSet'].forEach(id => $(id).classList.toggle('hide', id !== b.dataset.t));
+});
+
+/* ---------- التعاميم ---------- */
+async function loadCircs(){
+  S.circs = (await Circ.circulars()).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  if (!S.circs.length){ $('circs').innerHTML = '<p class="muted">لا توجد تعاميم بعد.</p>'; return; }
+  $('circs').innerHTML = '<p class="muted">جارٍ التحميل...</p>';
+  const counts = await Promise.all(S.circs.map(c => Circ.signatures(c.id).then(s => s.length)));
+  const total = S.staff.length;
+  $('circs').innerHTML = S.circs.map((c, i) => `
+    <div class="circ-item" onclick="openView('${c.id}')">
+      <div style="flex:1;min-width:0">
+        <b>${Circ.esc(c.title)}</b>
+        <div class="muted">رقم ${Circ.esc(c.number || '—')} · ${Circ.esc(c.date)}</div>
+        <div class="prog"><i style="width:${Math.round(counts[i] / total * 100)}%"></i></div>
+      </div>
+      <span class="badge ${counts[i] >= total ? 'ok' : 'wait'}">${counts[i]} / ${total}</span>
+    </div>`).join('');
+}
+async function addCircular(btn){
+  const title = $('cTitle').value.trim(), file = $('cFile').files[0];
+  if (!title) return toast('اكتب عنوان التعميم');
+  if (!file) return toast('اختر ملف التعميم');
+  await busy(btn, async () => {
+    const id = Circ.uid(8);
+    const ext = file.type === 'application/pdf' ? 'pdf' : (file.name.split('.').pop() || 'jpg');
+    const meta = { id, number: $('cNum').value.trim(), date: $('cDate').value.trim(), title, file: `c/${id}/circular.${ext}`, type: file.type, createdAt: new Date().toISOString() };
+    await Circ.putFile(meta.file, file);
+    await Circ.putJSON(`c/${id}/meta.json`, meta);
+    const idx = await Circ.circulars(); idx.push(meta); await Circ.putJSON('index.json', idx);
+    $('cTitle').value = ''; $('cNum').value = ''; $('cFile').value = '';
+    toast('تمت إضافة التعميم ✅');
+    await loadCircs(); openView(id);
+  });
+}
+
+/* ---------- تفاصيل التعميم ---------- */
+async function openView(id){
+  S.cur = S.circs.find(c => c.id === id) || await Circ.getJSON(`c/${id}/meta.json`);
+  if (!S.cur) return toast('التعميم غير موجود');
+  $('circList').classList.add('hide'); $('circView').classList.remove('hide');
+  $('dTitle').textContent = S.cur.title;
+  $('dMeta').textContent = `تعميم رقم ${S.cur.number || '—'} · بتاريخ ${S.cur.date}`;
+  history.replaceState(null, '', '?c=' + id);
+  await refresh(); window.scrollTo(0, 0);
+}
+function backToList(){ $('circView').classList.add('hide'); $('circList').classList.remove('hide'); history.replaceState(null, '', location.pathname); loadCircs(); }
+async function refresh(){
+  const ids = await Circ.signatures(S.cur.id);
+  const sigs = await Promise.all(ids.map(sid => Circ.getJSON(`c/${S.cur.id}/sig/${sid}.json`)));
+  S.sigs = {}; sigs.filter(Boolean).forEach(s => S.sigs[s.staffId] = s);
+  S.sent = (await Circ.getJSON(`c/${S.cur.id}/sent.json`)) || {};
+  const n = S.staff.length, k = S.staff.filter(t => S.sigs[t.id]).length;
+  $('sSigned').textContent = k; $('sPending').textContent = n - k;
+  $('sSent').textContent = S.staff.filter(t => S.sent[t.id] || S.sigs[t.id]).length;
+  $('dProg').style.width = Math.round(k / n * 100) + '%';
+  renderRows();
+}
+document.querySelectorAll('#chips button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('#chips button').forEach(x => x.classList.toggle('on', x === b)); S.filter = b.dataset.f; renderRows();
+});
+function renderRows(){
+  const q = $('q').value.trim();
+  const list = S.staff.map((t, i) => ({ t, i })).filter(({ t }) => {
+    const sg = !!S.sigs[t.id], sn = !!S.sent[t.id];
+    if (S.filter === 'pending' && sg) return false;
+    if (S.filter === 'signed' && !sg) return false;
+    if (S.filter === 'unsent' && (sg || sn)) return false;
+    return !q || t.name.includes(q);
+  });
+  $('rows').innerHTML = list.map(({ t, i }) => {
+    const sg = S.sigs[t.id];
+    const st = sg ? `<span class="badge ok">✓ وقّع ${Circ.esc(sg.hijri)} ${Circ.esc(sg.time)}</span>`
+             : S.sent[t.id] ? `<span class="badge sent">أُرسل · بانتظار التوقيع</span>` : `<span class="badge wait">لم يُرسل</span>`;
+    return `<div class="row-t"><span class="num">${i + 1}</span>
+      <div class="n">${Circ.esc(t.name)}<small>${t.phone ? Circ.esc(t.phone) : 'لا يوجد جوال'}</small></div>
+      <div class="acts">${st}
+        ${sg ? `<a class="btn ghost sm" target="_blank" href="${receiptLink(t)}">الإقرار</a>`
+             : `<button class="btn wa sm" onclick="sendTo('${t.id}')">${S.sent[t.id] ? 'تذكير' : 'واتساب'}</button>
+                <button class="btn ghost sm" onclick="copyLink('${t.id}')">نسخ الرابط</button>`}
+      </div></div>`;
+  }).join('') || '<p class="muted center" style="padding:14px">لا يوجد نتائج</p>';
+}
+const signLink = t => Circ.pageURL('sign.html', { c: S.cur.id, k: t.token });
+const receiptLink = t => Circ.pageURL('sign.html', { c: S.cur.id, k: t.token, v: 1 });
+function msgFor(t){
+  const reminder = S.sent[t.id] ? '🔔 تذكير: ' : '';
+  return `${reminder}السلام عليكم ورحمة الله وبركاته\nالأستاذ/ ${t.name}\n\nنفيدكم بصدور التعميم رقم (${S.cur.number || '—'}) بتاريخ ${S.cur.date}\nبشأن: ${S.cur.title}\n\nنأمل الاطلاع عليه والتوقيع إلكترونياً عبر الرابط التالي:\n${signLink(t)}\n\nإدارة ${S.settings.school}`;
+}
+async function markSent(id){ S.sent[id] = new Date().toISOString(); await Circ.putJSON(`c/${S.cur.id}/sent.json`, S.sent); }
+async function sendTo(id){
+  const t = S.staff.find(x => x.id === id);
+  window.open(Circ.wa(t.phone, msgFor(t)), '_blank');
+  await markSent(id); await refresh();
+}
+async function sendNext(){
+  const t = S.staff.find(x => !S.sigs[x.id] && !S.sent[x.id]);
+  if (!t) return toast('تم الإرسال لجميع المعلمين ✅ استخدم «تذكير» لمن لم يوقّع');
+  await sendTo(t.id); toast('تم فتح الواتساب لـ ' + t.name);
+}
+async function copyLink(id){
+  const t = S.staff.find(x => x.id === id);
+  try { await navigator.clipboard.writeText(msgFor(t)); toast('تم نسخ الرسالة مع الرابط'); } catch(e){ prompt('انسخ الرابط:', signLink(t)); }
+}
+function sendSummary(){
+  const n = S.staff.length, signed = S.staff.filter(t => S.sigs[t.id]);
+  const pend = S.staff.filter(t => !S.sigs[t.id]);
+  const txt = `سعادة مدير المدرسة أ. ${S.settings.principalName}\nملخص الاطلاع على التعميم رقم (${S.cur.number || '—'}) — ${S.cur.title}\n\n✅ وقّع: ${signed.length} من ${n}\n⏳ لم يوقّع: ${pend.length}\n${pend.length && pend.length <= 25 ? '\n' + pend.map((t, i) => `${i + 1}. ${t.name}`).join('\n') + '\n' : ''}\nلوحة المتابعة:\n${Circ.pageURL('circulars-admin.html', { c: S.cur.id })}`;
+  window.open(Circ.wa(S.settings.principalPhone, txt), '_blank');
+}
+async function openCircular(){
+  const b = await Circ.getFileBlob(S.cur.file); if (!b) return toast('تعذّر فتح الملف');
+  window.open(URL.createObjectURL(b), '_blank');
+}
+
+/* ---------- كشف الاطلاع للطباعة ---------- */
+function printSheet(){
+  const n = S.staff.length, k = S.staff.filter(t => S.sigs[t.id]).length;
+  $('printArea').innerHTML = `
+    <div class="p-head"><div class="row"><img src="moe-logo-white.png"><div class="sep"></div><div class="dept">الإدارة العامة للتعليم بمحافظة جدة</div></div><div class="pill">${Circ.esc(S.settings.school)}</div></div>
+    <div class="p-title">كشف الاطلاع على تعميم: ${Circ.esc(S.cur.title)}</div>
+    <div class="p-meta"><span><b>رقم التعميم:</b> ${Circ.esc(S.cur.number || '—')}</span><span><b>التاريخ:</b> ${Circ.esc(S.cur.date)}</span><span><b>طريقة التوقيع:</b> إلكتروني</span></div>
+    <div class="p-ack">أقرّ باطلاعي على التعميم والتزامي بالعمل بمضمونه.</div>
+    <table class="p-table"><thead><tr><th style="width:9mm">م</th><th>اسم المنسوب</th><th style="width:44mm">التوقيع</th><th style="width:34mm">تاريخ الاطلاع</th></tr></thead><tbody>
+    ${S.staff.map((t, i) => { const s = S.sigs[t.id]; return `<tr><td>${i + 1}</td><td class="nm">${Circ.esc(t.name)}</td><td>${s ? `<img src="${s.signature}">` : ''}</td><td>${s ? Circ.esc(s.hijri) + '<br><small>' + Circ.esc(s.time) + '</small>' : ''}</td></tr>`; }).join('')}
+    </tbody></table>
+    <div class="p-sum"><div class="s"><b>عدد الموقّعين</b>${k} من ${n}</div><div class="s"><b>مدير المدرسة</b>${Circ.esc(S.settings.principalName)}<br>التوقيع: ....................</div></div>`;
+  const imgs = [...$('printArea').querySelectorAll('img')];
+  Promise.all(imgs.map(i => i.complete ? 1 : new Promise(r => { i.onload = i.onerror = r; }))).then(() => window.print());
+}
+
+/* ---------- المنسوبون ---------- */
+function renderStaff(){
+  $('staffCount').textContent = `(${S.staff.length})`;
+  $('staffRows').innerHTML = S.staff.map((t, i) => `
+    <div class="row-t"><span class="num">${i + 1}</span>
+      <div class="n"><input type="text" value="${Circ.esc(t.name)}" data-i="${i}" data-k="name"></div>
+      <div style="width:150px"><input type="tel" value="${Circ.esc(t.phone)}" placeholder="05xxxxxxxx" data-i="${i}" data-k="phone"></div>
+      <button class="btn red sm" onclick="delStaff(${i})">✕</button></div>`).join('');
+  $('staffRows').querySelectorAll('input').forEach(inp => inp.oninput = () => { S.staff[inp.dataset.i][inp.dataset.k] = inp.value.trim(); });
+}
+function addStaff(){ S.staff.push({ id: Circ.uid(6), name: '', phone: '', token: Circ.uid(12) }); renderStaff(); }
+function delStaff(i){ if (confirm('حذف ' + (S.staff[i].name || 'المنسوب') + '؟')){ S.staff.splice(i, 1); renderStaff(); } }
+async function saveStaffUI(btn){
+  S.staff = S.staff.filter(t => t.name);
+  await busy(btn, async () => { await Circ.saveStaff(S.staff); renderStaff(); toast('تم حفظ قائمة المنسوبين ✅'); });
+}
+const norm = s => s.replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/\s+/g, '').replace(/^عبد/, 'عبد');
+function applyBulk(){
+  const lines = $('bulk').value.split('\n').map(l => l.trim()).filter(Boolean);
+  let upd = 0, add = 0;
+  lines.forEach(l => {
+    const m = l.match(/(\+?[\d٠-٩][\d٠-٩\s-]{7,})/); const ph = m ? m[1].replace(/[\s-]/g, '') : '';
+    const name = l.replace(m ? m[1] : '', '').replace(/[-–,،\t|:]+/g, ' ').trim();
+    if (!name) return;
+    const t = S.staff.find(x => norm(x.name) === norm(name));
+    if (t){ if (ph){ t.phone = ph; upd++; } }
+    else { S.staff.push({ id: Circ.uid(6), name, phone: ph, token: Circ.uid(12) }); add++; }
+  });
+  renderStaff(); toast(`تم تحديث ${upd} وإضافة ${add} — اضغط «حفظ التعديلات»`);
+}
+
+/* ---------- الإعلانات ---------- */
+const NT = { news:'📢 إعلان', event:'📅 فعالية', alert:'⚠️ هام', honor:'🏆 تكريم' };
+let NEWS = [];
+const isoToday = () => { const d = new Date(); return new Date(d - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10); };
+$('nDate').value = isoToday();
+async function loadNews(){
+  NEWS = (await Circ.getJSON('news.json')) || [];
+  NEWS.sort((a, b) => b.date.localeCompare(a.date));
+  const hj = d => Circ.hijri(new Date(d + 'T12:00:00'));
+  $('newsRows').innerHTML = NEWS.length ? NEWS.map(n => `<div class="row-t"><div class="n">${n.pin ? '📌 ' : ''}${Circ.esc(n.title)}<small>${NT[n.type] || ''} · ${hj(n.date)}</small></div>
+    <div class="acts"><button class="btn ghost sm" onclick="pinNews('${n.id}')">${n.pin ? 'إلغاء التثبيت' : 'تثبيت'}</button><button class="btn red sm" onclick="delNews('${n.id}')">حذف</button></div></div>`).join('') : '<p class="muted">لا يوجد</p>';
+}
+async function addNews(btn){
+  const title = $('nTitle').value.trim(); if (!title) return toast('اكتب العنوان');
+  await busy(btn, async () => {
+    const cur = (await Circ.getJSON('news.json')) || [];
+    cur.push({ id: Circ.uid(8), type: $('nType').value, date: $('nDate').value || isoToday(), title, body: $('nBody').value.trim(), pin: $('nPin').checked ? 1 : 0, createdAt: new Date().toISOString() });
+    await Circ.putJSON('news.json', cur);
+    $('nTitle').value = ''; $('nBody').value = ''; $('nPin').checked = false;
+    toast('تم النشر في البوابة ✅'); loadNews();
+  });
+}
+async function delNews(id){ if (!confirm('حذف هذا المنشور؟')) return; const cur = ((await Circ.getJSON('news.json')) || []).filter(x => x.id !== id); await Circ.putJSON('news.json', cur); loadNews(); }
+async function pinNews(id){ const cur = (await Circ.getJSON('news.json')) || []; cur.forEach(x => { if (x.id === id) x.pin = x.pin ? 0 : 1; }); await Circ.putJSON('news.json', cur); loadNews(); }
+
+/* ---------- الإعدادات ---------- */
+function fillSettings(){ $('sSchool').value = S.settings.school; $('sPName').value = S.settings.principalName; $('sPPhone').value = S.settings.principalPhone || ''; }
+async function saveSettings(btn){
+  await busy(btn, async () => {
+    const s = { ...S.settings, school: $('sSchool').value.trim(), principalName: $('sPName').value.trim(), principalPhone: $('sPPhone').value.trim() };
+    const pin = $('sPin').value.trim(); if (pin){ if (pin.length < 4) throw new Error('الرمز 4 أرقام على الأقل'); s.pinHash = await Circ.sha(pin); }
+    await Circ.putJSON('settings.json', s); S.settings = s; $('sPin').value = ''; toast('تم حفظ الإعدادات ✅');
+  });
+}
+</script>
+</body>
+</html>

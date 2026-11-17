@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>الاطلاع على التعميم والتوقيع | متوسطة مكة المكرمة</title>
+<link rel="stylesheet" href="circulars.css">
+</head>
+<body>
+<header class="hdr">
+  <div class="row"><img src="moe-logo-white.png" alt="وزارة التعليم"><div class="sep"></div><h1>الإدارة العامة للتعليم بمحافظة جدة</h1></div>
+  <div class="pill" id="school">متوسطة مكة المكرمة</div>
+</header>
+
+<main class="wrap">
+  <div id="loading" class="card center"><p class="muted">⏳ جارٍ تحميل التعميم...</p></div>
+  <div id="err" class="card center hide"><h2 style="justify-content:center">⚠️ الرابط غير صالح</h2><p class="muted" id="errMsg">تأكد من الرابط المرسل لك أو تواصل مع إدارة المدرسة.</p></div>
+
+  <!-- الاطلاع والتوقيع -->
+  <section id="vSign" class="hide">
+    <div class="card">
+      <div class="muted">الأستاذ/</div>
+      <h2 id="tName" style="margin:2px 0 10px"></h2>
+      <div class="receipt" style="padding:12px">
+        <div class="muted" id="cMeta"></div>
+        <b id="cTitle" style="color:var(--n);font-size:1.05rem"></b>
+      </div>
+    </div>
+    <div class="card">
+      <h2><span class="dot"></span>نص التعميم</h2>
+      <div class="pdf-host" id="pdf"></div>
+      <button class="btn ghost sm" style="margin-top:8px" onclick="viewCircular()">📄 فتح التعميم كملف PDF</button>
+    </div>
+    <div class="card">
+      <h2><span class="dot"></span>الإقرار والتوقيع</h2>
+      <label class="check"><input type="checkbox" id="ack"><span>أقرّ باطلاعي على التعميم والتزامي بالعمل بمضمونه.</span></label>
+      <p class="muted" style="margin:12px 0 6px">وقّع بإصبعك داخل المربع:</p>
+      <div class="sigbox"><canvas id="pad"></canvas><div class="ph" id="ph">✍️ التوقيع هنا</div></div>
+      <div class="toolbar">
+        <button class="btn ghost" onclick="clearPad()">مسح التوقيع</button>
+        <button class="btn g" style="flex:1" id="submit" onclick="submitSig(this)">✅ اعتماد التوقيع</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- بعد التوقيع / الإقرار -->
+  <section id="vDone" class="hide">
+    <div class="card center" id="doneHead">
+      <div class="ok-ic">✓</div>
+      <h2 style="justify-content:center">تم توقيعك بالاطلاع بنجاح</h2>
+      <p class="muted">شكراً لك، خطوة أخيرة: أرسل نسخة الإقرار لمدير المدرسة.</p>
+      <a class="btn wa" id="toPrincipal" target="_blank" style="margin-top:14px;width:100%">📲 إرسال نسخة الإقرار للمدير عبر الواتساب</a>
+    </div>
+    <div class="card">
+      <h2><span class="dot"></span>إقرار اطلاع إلكتروني</h2>
+      <div class="receipt">
+        <table>
+          <tr><td>المدرسة</td><td id="rSchool"></td></tr>
+          <tr><td>اسم المنسوب</td><td id="rName"></td></tr>
+          <tr><td>التعميم</td><td id="rTitle"></td></tr>
+          <tr><td>رقم التعميم وتاريخه</td><td id="rNum"></td></tr>
+          <tr><td>تاريخ الاطلاع والتوقيع</td><td id="rDate"></td></tr>
+          <tr><td>نص الإقرار</td><td>أقرّ باطلاعي على التعميم والتزامي بالعمل بمضمونه.</td></tr>
+          <tr><td>التوقيع</td><td><img id="rSig" alt="التوقيع"></td></tr>
+          <tr><td>رمز التحقق</td><td id="rCode" style="font-family:monospace;direction:ltr;text-align:right"></td></tr>
+        </table>
+      </div>
+      <div class="toolbar"><button class="btn ghost" onclick="window.print()">🖨️ حفظ الإقرار PDF</button><button class="btn ghost" onclick="viewCircular()">👁️ عرض التعميم</button></div>
+    </div>
+  </section>
+</main>
+
+<div id="printArea"></div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="circulars-core.js"></script>
+<script>
+if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+const $ = id => document.getElementById(id);
+const qs = new URLSearchParams(location.search);
+const CID = qs.get('c'), KEY = qs.get('k'), VIEW = qs.get('v');
+let ME, META, SET, blobCache;
+
+function toast(m){ const t = $('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2600); }
+function fail(m){ $('loading').classList.add('hide'); $('err').classList.remove('hide'); if (m) $('errMsg').textContent = m; }
+
+(async function init(){
+  try {
+    if (!CID || !KEY) return fail();
+    [ME, META, SET] = await Promise.all([Circ.getJSON(`keys/${KEY}.json`), Circ.getJSON(`c/${CID}/meta.json`), Circ.settings()]);
+    if (!ME || !META) return fail();
+    $('school').textContent = SET.school;
+    const sig = await Circ.getJSON(`c/${CID}/sig/${ME.id}.json`);
+    $('loading').classList.add('hide');
+    if (sig) return showDone(sig, !!VIEW);
+    if (VIEW) return fail('لم يوقّع المنسوب على هذا التعميم بعد.');
+    $('vSign').classList.remove('hide');
+    $('tName').textContent = ME.name;
+    $('cMeta').textContent = `تعميم رقم ${META.number || '—'} · بتاريخ ${META.date}`;
+    $('cTitle').textContent = META.title;
+    setupPad();
+    blobCache = await Circ.getFileBlob(META.file);
+    if (blobCache) await circRenderPDF(blobCache, $('pdf')); else $('pdf').innerHTML = '<p class="muted center">تعذّر تحميل ملف التعميم</p>';
+  } catch(e){ fail(e.message); }
+})();
+
+/* ---------- لوحة التوقيع ---------- */
+let pad, ctx, drawing = false, hasInk = false, last;
+function setupPad(){
+  pad = $('pad'); ctx = pad.getContext('2d');
+  const fit = () => { const r = pad.getBoundingClientRect(), d = window.devicePixelRatio || 1; pad.width = r.width * d; pad.height = r.height * d; ctx.setTransform(d, 0, 0, d, 0, 0); ctx.lineWidth = 2.6; ctx.lineCap = ctx.lineJoin = 'round'; ctx.strokeStyle = '#13294b'; hasInk = false; $('ph').style.display = ''; };
+  fit(); window.addEventListener('resize', () => { if (!hasInk) fit(); });
+  const pos = e => { const r = pad.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
+  pad.addEventListener('pointerdown', e => { drawing = true; last = pos(e); pad.setPointerCapture(e.pointerId); ctx.beginPath(); ctx.arc(last.x, last.y, 1.2, 0, 7); ctx.fillStyle = '#13294b'; ctx.fill(); });
+  pad.addEventListener('pointermove', e => { if (!drawing) return; const p = pos(e); ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(p.x, p.y); ctx.stroke(); last = p; if (!hasInk){ hasInk = true; $('ph').style.display = 'none'; } });
+  ['pointerup','pointercancel','pointerleave'].forEach(ev => pad.addEventListener(ev, () => drawing = false));
+}
+function clearPad(){ ctx.clearRect(0, 0, pad.width, pad.height); hasInk = false; $('ph').style.display = ''; }
+function trimmedSignature(){
+  const w = pad.width, h = pad.height, data = ctx.getImageData(0, 0, w, h).data;
+  let x0 = w, y0 = h, x1 = 0, y1 = 0;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (data[(y * w + x) * 4 + 3] > 10){ if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  const m = 8; x0 = Math.max(0, x0 - m); y0 = Math.max(0, y0 - m); x1 = Math.min(w, x1 + m); y1 = Math.min(h, y1 + m);
+  const sc = Math.min(1, 500 / (x1 - x0));
+  const c = document.createElement('canvas'); c.width = (x1 - x0) * sc; c.height = (y1 - y0) * sc;
+  c.getContext('2d').drawImage(pad, x0, y0, x1 - x0, y1 - y0, 0, 0, c.width, c.height);
+  return c.toDataURL('image/png');
+}
+async function submitSig(btn){
+  if (!$('ack').checked) return toast('فضلاً أكّد الإقرار بالاطلاع أولاً');
+  if (!hasInk) return toast('فضلاً وقّع داخل المربع');
+  btn.disabled = true; btn.textContent = '⏳ جارٍ الحفظ...';
+  try {
+    const now = new Date();
+    const rec = { staffId: ME.id, name: ME.name, circularId: CID, signature: trimmedSignature(), signedAt: now.toISOString(), hijri: Circ.hijri(now), time: Circ.timeStr(now), device: navigator.userAgent.slice(0, 160) };
+    rec.code = (await Circ.sha(rec.staffId + rec.circularId + rec.signedAt + rec.signature.length)).slice(0, 12).toUpperCase();
+    await Circ.putJSON(`c/${CID}/sig/${ME.id}.json`, rec);
+    $('vSign').classList.add('hide'); showDone(rec, false); window.scrollTo(0, 0);
+  } catch(e){ alert(e.message); btn.disabled = false; btn.textContent = '✅ اعتماد التوقيع'; }
+}
+
+/* ---------- الإقرار ---------- */
+function showDone(r, viewOnly){
+  $('vDone').classList.remove('hide');
+  if (viewOnly) $('doneHead').classList.add('hide');
+  $('rSchool').textContent = SET.school; $('rName').textContent = r.name; $('rTitle').textContent = META.title;
+  $('rNum').textContent = `رقم ${META.number || '—'} · ${META.date}`; $('rDate').textContent = `${r.hijri} — الساعة ${r.time}`;
+  $('rSig').src = r.signature; $('rCode').textContent = r.code || '—';
+  const link = Circ.pageURL('sign.html', { c: CID, k: KEY, v: 1 });
+  const txt = `سعادة مدير المدرسة أ. ${SET.principalName}\nالسلام عليكم ورحمة الله وبركاته\n\nأفيدكم باطلاعي على التعميم رقم (${META.number || '—'}) بتاريخ ${META.date}\nبشأن: ${META.title}\nوتوقيعي عليه إلكترونياً بتاريخ ${r.hijri} الساعة ${r.time}.\n\nنسخة الإقرار الموقّع:\n${link}\n\n${r.name}`;
+  $('toPrincipal').href = Circ.wa(SET.principalPhone, txt);
+  // نسخة الطباعة
+  $('printArea').innerHTML = `<div class="p-head"><div class="row"><img src="moe-logo-white.png"><div class="sep"></div><div class="dept">الإدارة العامة للتعليم بمحافظة جدة</div></div><div class="pill">${Circ.esc(SET.school)}</div></div>
+    <div class="p-title">إقرار اطلاع إلكتروني على تعميم</div><div class="receipt" style="margin-top:6mm">${document.querySelector('#vDone .receipt').innerHTML}</div>`;
+}
+async function viewCircular(){ const b = blobCache || await Circ.getFileBlob(META.file); if (b) window.open(URL.createObjectURL(b), '_blank'); }
+</script>
+</body>
+</html>
