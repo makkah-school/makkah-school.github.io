@@ -555,19 +555,33 @@ let tm; q.addEventListener('input',()=>{ clearTimeout(tm); tm=setTimeout(doSearc
 
 
 /* ===== access codes ===== */
-const ACC = { secret:'dc7ede73b02dce609bf041e8a52898f2', adminHash:'398dc46ba4b05fb9b99d80c49af7cc065c504fb08ca21d0862797beadab2b9b4' };
+const SB = { url:'https://pyrxwqgapwjwhiskowhk.supabase.co', key:'sb_publishable_bfe-B4f-Rag1SR0-PoIb9w_nMfA1Ere', bucket:'reports', root:'school-portal/ev/' };
+const ACC = { adminHash:'398dc46ba4b05fb9b99d80c49af7cc065c504fb08ca21d0862797beadab2b9b4' };
 const SKEY='mk48_access';
 async function devOk(pw){ try{ const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveBits']); const b=await crypto.subtle.deriveBits({name:'PBKDF2',salt:new TextEncoder().encode('51bf18d5eb01a779'),iterations:150000,hash:'SHA-256'},k,256); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')==='dae2bc37be8e7cf4410540aaec0a043f044261658e43fa4bef2bec674ce5fae7'; }catch(e){ return false; } }
 async function sha(s){ const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join(''); }
-const B36=n=>n.toString(36).toUpperCase();
-async function sigFor(expMin){ const h=await sha(ACC.secret+':'+expMin); return B36(parseInt(h.slice(0,8),16)).padStart(6,'0').slice(-5); }
-async function makeCode(hours){ const exp=Math.floor(Date.now()/60000)+Math.round(hours*60); return {code:B36(exp)+'-'+await sigFor(exp), exp:exp*60000}; }
-async function checkCode(raw){
-  const c=raw.trim().toUpperCase().replace(/[\s_]/g,'').replace(/[–—]/g,'-');
-  const m=c.match(/^([0-9A-Z]{4,8})-?([0-9A-Z]{5})$/); if(!m) return null;
-  const exp=parseInt(m[1],36); if(!exp) return null;
-  if(await sigFor(exp)!==m[2]) return null;
-  return {exp:exp*60000};
+const CODE_AB='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+function normCode(raw){ return String(raw||'').toUpperCase().replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[^A-Z0-9]/g,''); }
+async function codePut(h,obj){
+  if(!SB.key){ localStorage.setItem('mk48_demo_'+h,JSON.stringify(obj)); return; }
+  const r=await fetch(`${SB.url}/storage/v1/object/${SB.bucket}/${SB.root}${h}.json`,{method:'POST',headers:{apikey:SB.key,Authorization:'Bearer '+SB.key,'Content-Type':'application/json','x-upsert':'true','cache-control':'max-age=0'},body:JSON.stringify(obj)});
+  if(!r.ok) throw new Error('تعذّر حفظ الرمز ('+r.status+')');
+}
+async function codeGet(h){
+  if(!SB.key){ try{ return JSON.parse(localStorage.getItem('mk48_demo_'+h)||'null'); }catch(e){ return null; } }
+  try{ const r=await fetch(`${SB.url}/storage/v1/object/public/${SB.bucket}/${SB.root}${h}.json?t=${Date.now()}`,{cache:'no-store'}); return r.ok? await r.json() : null; }catch(e){ return null; }
+}
+async function makeCode(hours, name){
+  const a=new Uint32Array(10); crypto.getRandomValues(a);
+  const raw=[...a].map(x=>CODE_AB[x%CODE_AB.length]).join('');
+  const exp=Date.now()+Math.round(hours*36e5);
+  await codePut(await sha('mk48:'+raw),{exp,name:name||'',at:Date.now()});
+  return {code:raw.slice(0,5)+'-'+raw.slice(5), exp};
+}
+async function checkCode(v){
+  const c=normCode(v); if(c.length!==10) return null;
+  const d=await codeGet(await sha('mk48:'+c)); if(!d||!d.exp) return null;
+  return {exp:+d.exp};
 }
 function getSess(){ try{ const s=JSON.parse(localStorage.getItem(SKEY)||'null'); if(s && s.exp>Date.now()) return s; }catch(e){} return null; }
 function setSess(s){ try{ localStorage.setItem(SKEY,JSON.stringify(s)); }catch(e){} CURRENT=s; }
@@ -628,7 +642,7 @@ function renderAdmin(){
   view.querySelectorAll('.durs button').forEach(b=>b.onclick=()=>{ admHours=+b.dataset.h; view.querySelectorAll('.durs button').forEach(x=>x.classList.toggle('on',x===b)); });
   document.getElementById('admOut').onclick=()=>{ location.hash=''; lock('تم تسجيل الخروج.'); };
   document.getElementById('admGen').onclick=async()=>{
-    const name=document.getElementById('admName').value.trim(); const {code,exp}=await makeCode(admHours);
+    const name=document.getElementById('admName').value.trim(); let code,exp; try{ ({code,exp}=await makeCode(admHours,name)); }catch(err){ alert(err.message); return; }
     histAdd({code,exp,name,at:Date.now()});
     LASTCODE={code,exp,name}; renderAdmin(); document.getElementById('admName').value=name;
     document.getElementById('cdV').textContent=code;
