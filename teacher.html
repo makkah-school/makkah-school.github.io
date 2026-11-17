@@ -566,7 +566,7 @@ let ME = null;
 function toast(m){ const t = $('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2600); }
 function togglePw(id, b){ const i = $(id); i.type = i.type === 'password' ? 'text' : 'password'; b.textContent = i.type === 'password' ? '👁️' : '🙈'; }
 function err(id, m){ const e = $(id); e.textContent = m; e.classList.toggle('on', !!m); }
-const next = new URLSearchParams(location.search).get('next');
+const next = (n => n && /^[a-z0-9-]+\.html(\?[\w=&%.-]*)?$/i.test(n) ? n : null)(new URLSearchParams(location.search).get('next'));  // صفحات الموقع فقط
 
 /* ---------- الدخول ---------- */
 $('loginForm').onsubmit = async e => {

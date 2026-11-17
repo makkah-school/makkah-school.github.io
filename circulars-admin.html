@@ -117,6 +117,7 @@ textarea{min-height:120px;resize:vertical}
 .p-sum .s{text-align:center}.p-sum .s b{display:block;color:var(--g)}
 
 </style>
+<style>.st-row{flex-wrap:wrap}.st-row .acts{margin-inline-start:auto}</style>
 </head>
 <body>
 <header class="hdr">
@@ -179,7 +180,9 @@ textarea{min-height:120px;resize:vertical}
             <div class="stat"><b id="sSent">0</b><span>أُرسل لهم</span></div>
           </div>
           <div class="toolbar">
-            <button class="btn wa" onclick="sendNext()">📲 إرسال للتالي</button>
+            <button class="btn wa" onclick="sendGroup()" style="background:#128c7e">📢 رابط واحد للقروب</button>
+            <button class="btn ghost" onclick="remindGroup()">🔔 تذكير القروب بمن لم يوقّع</button>
+            <button class="btn wa" onclick="sendNext()">📲 إرسال للتالي (فردي)</button>
             <button class="btn" onclick="printSheet()">🖨️ كشف الاطلاع PDF</button>
             <button class="btn g" onclick="sendSheet()">📋 إرسال الكشف للمدير</button>
             <button class="btn ghost" onclick="sendSummary()">📊 ملخص للمدير</button>
@@ -188,7 +191,7 @@ textarea{min-height:120px;resize:vertical}
             <button class="btn ghost" onclick="editCircular()">✏️ تعديل</button>
             <button class="btn red" onclick="deleteCircular()">🗑️ حذف التعميم</button>
           </div>
-          <p class="muted" style="margin-top:8px">«إرسال للتالي» يفتح الواتساب لأول معلم لم يوقّع ولم تُرسل له بعد، واحد تلو الآخر.</p>
+          <p class="muted" style="margin-top:8px">📢 <b>رابط واحد للقروب:</b> رسالة واحدة ترسلها في قروب المعلمين، وكل معلم يدخل بحسابه ويوقّع باسمه. · 📲 <b>الفردي:</b> رابط خاص لكل معلم بدون كلمة مرور (لمن لا يملك حساباً).</p>
         </div>
         <div class="card">
           <div class="chips" id="chips">
@@ -244,10 +247,14 @@ textarea{min-height:120px;resize:vertical}
     <!-- ملفات الإنجاز -->
     <div id="tPf" class="hide">
       <div class="card">
-        <h2><span class="dot"></span>ملفات إنجاز المنسوبين</h2>
+        <h2><span class="dot"></span>ملفات إنجاز المنسوبين — متابعة الجاهزية</h2>
+        <p class="muted" style="margin:-4px 0 10px;font-size:.85rem">الجاهزية = مجموع أوزان بنود نموذج تقييم الأداء الوظيفي التي أرفق لها المنسوب شاهداً واحداً على الأقل.</p>
         <div class="stats" id="pfStats"></div>
         <input id="pfQ" type="text" placeholder="🔍 بحث بالاسم أو المسمى" oninput="renderPf()">
         <div class="chips" id="pfChips" style="margin-top:10px"></div>
+        <div class="chips" id="pfLv" style="margin-top:6px"></div>
+        <div class="toolbar" style="margin-top:8px"><button class="btn ghost sm" onclick="pfRemind()">📲 تذكير المتأخرين بالواتساب</button><button class="btn ghost sm" onclick="pfPrint()">🖨️ طباعة تقرير الجاهزية</button></div>
+        <div id="pfRem"></div>
         <div id="pfRows" style="margin-top:6px"><p class="muted">⏳ جارٍ التحميل...</p></div>
       </div>
     </div>
@@ -495,22 +502,130 @@ async function circRenderPDF(blob, host){
   }
   window.circGoBack = goBack;
   function wire(){
-    document.querySelectorAll('a.home-link[href="index.html"]:not([data-nb])').forEach(a => {
+    [...document.querySelectorAll('a[href="index.html"]:not([data-nb])')].filter(a => a.classList.contains('home-link') || /العودة للبوابة/.test(a.textContent)).forEach(a => {
       a.setAttribute('data-nb', '1');
       a.innerHTML = '🏠 البوابة الرئيسية';
       const b = document.createElement('a');
-      b.href = '#'; b.className = a.className.replace(/\bback\b/, '').trim(); b.setAttribute('data-nb', '1');
+      b.href = '#'; b.className = a.className.replace(/\bback\b/, '').trim(); b.setAttribute('data-nb', '1'); if (a.getAttribute('style')) b.setAttribute('style', a.getAttribute('style'));
       b.innerHTML = '→ الصفحة السابقة';
       b.onclick = e => { e.preventDefault(); goBack(); };
       const w = document.createElement(a.classList.contains('back') ? 'div' : 'span');
       w.className = 'nav-pair' + (a.classList.contains('back') ? ' back' : '');
       a.classList.remove('back');
       a.parentNode.insertBefore(w, a); w.appendChild(b); w.appendChild(a);
+      if (!a.classList.contains('home-link')){ w.style.cssText = 'display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap'; a.style.borderInlineStart = '1.5px solid currentColor'; a.style.paddingInlineStart = '10px'; }
     });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wire); else wire();
   new MutationObserver(wire).observe(document.documentElement, { childList:true, subtree:true });
 })();
+
+/* =====================================================================
+   نماذج تقييم الأداء الوظيفي (الدليل الإرشادي لإدارة الأداء الوظيفي
+   لشاغلي الوظائف التعليمية — وزارة التعليم). البند: [العنوان، الوزن٪ أو null، الشواهد المقترحة]
+   ===================================================================== */
+const PF_MODELS = (function(){
+  const S = { // البنود المشتركة وبنود المعلم (الترتيب ثابت — لا يُغيَّر)
+    duty:'أداء الواجبات الوظيفية', comm:'التفاعل مع المجتمع المهني', par:'التفاعل مع أولياء الأمور', strat:'التنويع في استراتيجيات التدريس',
+    out:'تحسين نتائج المتعلمين', plan:'إعداد وتنفيذ خطة التعلم', tech:'توظيف تقنيات ووسائل التعلم المناسبة', env:'تهيئة البيئة التعليمية',
+    cls:'الإدارة الصفية', ana:'تحليل نتائج المتعلمين وتشخيص مستوياتهم', asm:'تنوع أساليب التقويم'
+  };
+  const G = {
+    duty:['التقيّد بالدوام الرسمي', 'تأدية الحصص وفق الجدول', 'المناوبة والإشراف', 'التحضير وإعداد الدروس'],
+    comm:['مجتمعات التعلم المهنية', 'تبادل الزيارات', 'الدروس التطبيقية', 'حضور الدورات وورش العمل'],
+    par:['التواصل مع أولياء الأمور', 'تقارير مستوى الطلاب', 'اجتماع أولياء الأمور', 'الخطة الأسبوعية لولي الأمر'],
+    strat:['استراتيجيات التعلم النشط', 'التعلم التعاوني', 'صور تطبيق الاستراتيجيات', 'خرائط ذهنية'],
+    out:['الخطط العلاجية', 'برامج الإثراء', 'تكريم المتفوقين', 'مقارنة النتائج'],
+    plan:['توزيع المنهج', 'التحضير', 'الخطة الأسبوعية', 'الواجبات والأنشطة'],
+    tech:['منصة مدرستي', 'العروض التقديمية', 'الوسائل التعليمية', 'الاختبارات الإلكترونية'],
+    env:['مراعاة الفروق الفردية', 'التحفيز والتعزيز', 'قواعد الصف', 'الأنشطة الصفية'],
+    cls:['ضبط سلوك الطلاب', 'إدارة الوقت', 'سجل المتابعة', 'جذب الانتباه'],
+    ana:['الاختبار التشخيصي', 'تحليل النتائج', 'تصنيف الطلاب', 'الرسوم البيانية للنتائج'],
+    asm:['اختبارات ورقية وإلكترونية', 'المشاريع والبحوث', 'ملفات أعمال الطلاب', 'التقويم الذاتي والأقران']
+  };
+  const T = (w) => Object.keys(S).map(k => [S[k], w[k], G[k]]);
+  return {
+    teacher:{ name:'نموذج المعلم', official:true,
+      items: T({ duty:10, comm:10, par:10, strat:10, out:10, plan:10, tech:10, env:5, cls:5, ana:10, asm:10 }) },
+    activity:{ name:'نموذج المعلم المكلّف بالنشاط الطلابي', official:true,
+      items: T({ duty:10, comm:10, par:5, strat:5, out:5, plan:10, tech:5, env:5, cls:5, ana:5, asm:5 }).concat([
+        ['إعداد خطة برامج النشاط وتنفيذها', 10, ['الخطة السنوية للنشاط', 'تقارير البرامج', 'الجدول الزمني']],
+        ['تهيئة البيئة المدرسية للأنشطة', 5, ['تجهيز أماكن النشاط', 'الأندية الطلابية', 'صور البيئة']],
+        ['دعم المتعلمين', 5, ['اكتشاف المواهب', 'المسابقات', 'المشاركات الخارجية']],
+        ['تحفيز المتعلمين', 10, ['شهادات التكريم', 'لوحات الشرف', 'الحوافز']]]) },
+    health:{ name:'نموذج المعلم المكلّف بالتوجيه الصحي', official:true,
+      items: T({ duty:10, comm:10, par:5, strat:5, out:5, plan:10, tech:5, env:5, cls:5, ana:5, asm:5 }).concat([
+        ['تنفيذ البرنامج الصحي المدرسي المشترك', 15, ['خطة البرنامج الصحي', 'الحملات التوعوية', 'التقارير']],
+        ['حصر الحالات الصحية للمتعلمين', 5, ['سجل الحالات الصحية', 'التواصل مع الأسر', 'الإحالات']],
+        ['البيئة الصحية المدرسية', 10, ['متابعة المقصف', 'النظافة والسلامة', 'الإسعافات الأولية']]]) },
+    counselor:{ name:'نموذج الموجه الطلابي', official:true, note:'أوزان هذا النموذج غير واضحة في نسخة الدليل المتاحة، لذلك تُعرض البنود بدون نسب.',
+      items: [
+        ['أداء الواجبات الوظيفية', null, ['سجل الدوام', 'الخطة الفصلية', 'السجلات الإرشادية']],
+        ['التدخلات المتعلقة بالانضباط', null, ['متابعة الغياب والتأخر', 'دراسة الحالات', 'العقود السلوكية']],
+        ['برامج التحفيز', null, ['تكريم المنضبطين', 'المسابقات', 'لوحات التميز']],
+        ['دعم التخطيط', null, ['الخطة الإرشادية', 'لجنة التوجيه', 'محاضر الاجتماعات']],
+        ['تعزيز القيم', null, ['البرامج القيمية', 'الإذاعة المدرسية', 'المبادرات']],
+        ['التدخلات النفسية', null, ['دراسة الحالات الفردية', 'الإحالات', 'الإرشاد الجمعي']],
+        ['دعم التميز', null, ['رعاية المتفوقين', 'برامج الموهوبين', 'التحصيل الدراسي']],
+        ['الدعم العلاجي للطلاب', null, ['برامج المتأخرين دراسياً', 'الخطط العلاجية', 'المتابعة']],
+        ['التوعية للطلاب وأولياء الأمور', null, ['النشرات التوعوية', 'اللقاءات', 'رسائل التواصل']]] },
+    leader:{ name:'نموذج القيادة المدرسية (المدير والوكيل)', official:true, note:'أوزان هذا النموذج غير واضحة في نسخة الدليل المتاحة، لذلك تُعرض البنود بدون نسب.',
+      items: [
+        ['أداء الواجبات الوظيفية', null, ['سجل الدوام', 'التكاليف', 'المهام اليومية']],
+        ['التفاعل مع المجتمع المهني وأولياء الأمور', null, ['الشراكات المجتمعية', 'اجتماعات أولياء الأمور', 'تبادل الخبرات']],
+        ['العمل بمرونة في الظروف المتنوعة', null, ['خطط الطوارئ', 'التعليم عن بعد', 'حلول المواقف']],
+        ['دعم الابتكار', null, ['المبادرات النوعية', 'تحفيز المعلمين', 'المشاريع']],
+        ['إجراءات الانضباط', null, ['متابعة الحضور', 'قواعد السلوك', 'الإجراءات المتخذة']],
+        ['إدارة الموارد', null, ['الميزانية التشغيلية', 'العهد والمستودعات', 'الصيانة']],
+        ['التخطيط للتطوير المهني', null, ['خطة التطوير المهني', 'الاحتياجات التدريبية', 'التدريب الداخلي']],
+        ['التغذية الراجعة', null, ['الزيارات الصفية', 'استمارات المتابعة', 'التوصيات']],
+        ['تقويم أداء العاملين', null, ['مواثيق الأداء', 'سجلات المتابعة', 'نتائج التقويم']],
+        ['الإجراءات العلمية لتحسين نواتج التعلم', null, ['تحليل النتائج', 'خطط التحسين', 'اختبارات نافس']],
+        ['التخطيط المدرسي', null, ['الخطة التشغيلية', 'التقويم الذاتي', 'الخطة الاستراتيجية']],
+        ['البيئة الآمنة', null, ['الأمن والسلامة', 'تجربة الإخلاء', 'بلاغات الصيانة']],
+        ['توظيف المنصات الرقمية', null, ['نظام نور', 'منصة مدرستي', 'التعاملات الإلكترونية']]] },
+    lab:{ name:'نموذج محضر المختبر', official:true, note:'أوزان هذا النموذج غير واضحة في نسخة الدليل المتاحة، لذلك تُعرض البنود بدون نسب.',
+      items: [
+        ['تخطيط النشاط اليومي', null, ['الخطة اليومية', 'جدول التجارب', 'التنسيق مع المعلمين']],
+        ['الأسس العلمية', null, ['أدلة التجارب', 'النشرات العلمية']],
+        ['توفير المستلزمات', null, ['طلبات المواد', 'سجل المستهلكات', 'الجرد']],
+        ['السلامة في المختبر', null, ['تعليمات السلامة', 'طفايات الحريق', 'سجل الحوادث']],
+        ['تجهيز الأجهزة', null, ['تجهيز التجارب', 'صيانة الأجهزة', 'صور التجهيز']],
+        ['التقارير الأسبوعية', null, ['التقرير الأسبوعي', 'سجل الاستخدام']],
+        ['التقارير الدورية عن الأجهزة', null, ['تقرير حالة الأجهزة', 'بلاغات الأعطال']]] },
+    admin:{ name:'الوظائف الإدارية (ميثاق الأداء: الأهداف والجدارات)', official:false, note:'شاغلو الوظائف الإدارية يُقيَّمون بميثاق أداء (4–6 أهداف يتفق عليها الموظف ومديره) مع الجدارات. هذه البنود إطار عام لتنظيم الشواهد.',
+      items: [
+        ['تحقيق أهداف ميثاق الأداء', null, ['ميثاق الأداء', 'تقارير الإنجاز', 'المهام المنجزة']],
+        ['المسؤولية', null, ['الالتزام بالدوام', 'إنجاز المهام في وقتها', 'التكاليف']],
+        ['العمل الجماعي', null, ['المشاركة في اللجان', 'التعاون مع الزملاء', 'الفعاليات']],
+        ['المرونة للتغيير', null, ['تطبيق الأنظمة الجديدة', 'التحول الرقمي', 'حل المشكلات']],
+        ['المبادرة', null, ['المبادرات', 'المقترحات', 'تطوير الإجراءات']],
+        ['التطوير المهني', null, ['الدورات التدريبية', 'الشهادات', 'ورش العمل']]] }
+  };
+})();
+const PF_MODEL_LABELS = { teacher:'معلم', activity:'معلم + تكليف نشاط طلابي', health:'معلم + تكليف توجيه صحي', counselor:'موجه طلابي', leader:'قيادة مدرسية (مدير / وكيل)', lab:'محضر مختبر', admin:'وظيفة إدارية' };
+function pfModelKey(title, model){
+  if (model && PF_MODELS[model]) return model;   // يحدده المدير من «المنسوبون»
+  const t = String(title || '');
+  if (/رائد\s*نشاط/.test(t)) return 'activity';
+  if (/موجه\s*صحي/.test(t)) return 'health';
+  if (/موجه\s*طلابي|مرشد/.test(t)) return 'counselor';
+  if (/وكيل|مدير/.test(t)) return 'leader';
+  if (/محضر/.test(t)) return 'lab';
+  if (!t || /معلم/.test(t)) return 'teacher';
+  return 'admin';
+}
+const PF_WIT = /^(school_work|photo_witness|student_product|lesson|wit_other)$/;
+/* جاهزية الملف: مجموع أوزان البنود التي لها شاهد واحد على الأقل */
+function pfReadiness(pf, title, model){
+  const M = PF_MODELS[pfModelKey(title, model)], items = M.items, n = items.length;
+  const cnt = items.map(() => 0); let other = 0;
+  ((pf && pf.items) || []).forEach(x => { if (!PF_WIT.test(x.type)) return; const a = +x.ax || 0; if (a >= 1 && a <= n) cnt[a - 1]++; else other++; });
+  const w = items.map(it => it[1] == null ? 100 / n : it[1]), tot = w.reduce((s, v) => s + v, 0);
+  const got = w.reduce((s, v, i) => s + (cnt[i] ? v : 0), 0);
+  return { model:M, key:pfModelKey(title, model), cnt, other, pct: Math.round(got / tot * 100), done: cnt.filter(Boolean).length, n,
+           missing: items.map((it, i) => cnt[i] ? null : it[0]).filter(Boolean) };
+}
 
 </script>
 <script>
@@ -645,6 +760,19 @@ async function sendTo(id){
   window.open(Circ.wa(t.phone, msgFor(t)), '_blank');
   await markSent(id); await refresh();
 }
+const groupLink = () => Circ.pageURL('sign.html', { c: S.cur.id });
+function groupMsg(){ return `السلام عليكم ورحمة الله وبركاته\nالزملاء الكرام منسوبي ${S.settings.school}\n\nنفيدكم بصدور التعميم رقم (${S.cur.number || '—'}) بتاريخ ${S.cur.date}\nبشأن: ${S.cur.title}\n\nنأمل من الجميع الاطلاع عليه والتوقيع إلكترونياً عبر الرابط التالي (الدخول باسم المستخدم وكلمة المرور):\n${groupLink()}\n\nإدارة ${S.settings.school}`; }
+async function sendGroup(){
+  window.open('https://wa.me/?text=' + encodeURIComponent(groupMsg()), '_blank');
+  try { await navigator.clipboard.writeText(groupMsg()); } catch(e){}
+  toast('اختر قروب المعلمين في الواتساب ✅ (والرسالة منسوخة أيضاً)');
+}
+function remindGroup(){
+  const pend = S.staff.filter(t => !S.sigs[t.id]);
+  if (!pend.length) return toast('الجميع وقّع ✅');
+  const msg = `🔔 تذكير\nالتعميم رقم (${S.cur.number || '—'}) — ${S.cur.title}\n\nلم يوقّع بعد (${pend.length}):\n${pend.map((t, i) => `${i + 1}. أ. ${t.name}`).join('\n')}\n\nرابط التوقيع:\n${groupLink()}`;
+  window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+}
 async function sendNext(){
   const t = S.staff.find(x => !S.sigs[x.id] && !S.sent[x.id]);
   if (!t) return toast('تم الإرسال لجميع المعلمين ✅ استخدم «تذكير» لمن لم يوقّع');
@@ -723,16 +851,18 @@ function printSheet(){
 function renderStaff(){
   $('staffCount').textContent = `(${S.staff.length})`;
   $('staffRows').innerHTML = S.staff.map((t, i) => `
-    <div class="row-t"><span class="num">${i + 1}</span>
-      <div class="n"><input type="text" value="${Circ.esc(t.name)}" data-i="${i}" data-k="name"></div>
+    <div class="row-t st-row"><span class="num">${i + 1}</span>
+      <div class="n" style="min-width:210px"><input type="text" value="${Circ.esc(t.name)}" data-i="${i}" data-k="name"></div>
       <div style="width:150px"><input type="text" list="jobsDl" value="${Circ.esc(t.title || '')}" placeholder="المسمى الوظيفي" data-i="${i}" data-k="title"></div>
+      <div style="width:175px"><select data-i="${i}" data-k="model" title="نموذج تقييم الأداء الوظيفي (يحدد بنود ملف الإنجاز)"><option value="">🔄 تلقائي: ${Circ.esc(PF_MODEL_LABELS[pfModelKey(t.title)])}</option>${Object.entries(PF_MODEL_LABELS).map(([k, l]) => `<option value="${k}" ${t.model === k ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
       <div style="width:140px"><input type="tel" value="${Circ.esc(t.phone)}" placeholder="05xxxxxxxx" data-i="${i}" data-k="phone"></div>
       <div class="acts" style="align-items:center"><span class="muted" title="اسم المستخدم">👤 ${Circ.esc(t.user || '—')}</span>
         <span class="st-pw ${t.pw ? 'ok' : 'no'}">${t.pw ? (t.pw.byUser ? 'غيّرها المعلم' : 'مُصدرة') : 'بلا كلمة مرور'}</span>
         <a class="btn ghost sm" target="_blank" href="portfolio.html?id=${t.id}" title="ملف الإنجاز">🏆</a>
         <button class="btn sm" onclick="issuePw(${i})">🔑 ${t.pw ? 'إعادة تعيين' : 'إصدار'}</button>
         <button class="btn red sm" onclick="delStaff(${i})">✕</button></div></div>`).join('');
-  $('staffRows').querySelectorAll('input').forEach(inp => inp.oninput = () => { S.staff[inp.dataset.i][inp.dataset.k] = inp.value.trim(); });
+  $('staffRows').querySelectorAll('input[data-k]').forEach(inp => inp.oninput = () => { S.staff[inp.dataset.i][inp.dataset.k] = inp.value.trim(); });
+  $('staffRows').querySelectorAll('select[data-k]').forEach(sel => sel.onchange = () => { const t = S.staff[sel.dataset.i]; if (sel.value) t.model = sel.value; else delete t.model; toast('اضغط «💾 حفظ التعديلات» لاعتماد النموذج'); });
   filterStaff();
 }
 const normAr = v => String(v || '').toLowerCase().replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/[ًٌٍَُِّْـ]/g, '').replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/\s+/g, ' ').trim();
@@ -841,20 +971,52 @@ async function loadPf(){
   PFS = out; renderPf();
 }
 function pfCount(p){ const c = { a:0, w:0 }; (p && p.items || []).forEach(x => /^(school_work|photo_witness|student_product|lesson|wit_other)$/.test(x.type) ? c.w++ : c.a++); return c; }
+let PFL = 'all';
+const PF_LV = { all:'كل المستويات', low:'🔴 أقل من 50٪', mid:'🟠 50–79٪', high:'🟢 80٪ فأكثر', none:'⚪ لم يبدأ' };
+function pfRows(){
+  const q = ($('pfQ').value || '').trim();
+  return S.staff.map((t, i) => { const p = PFS[t.id], c = pfCount(p), r = pfReadiness(p, t.title, t.model); return { t, i, p, c, r }; })
+    .filter(x => (PFF === 'all' || (x.t.title || 'بدون مسمى') === PFF) && (!q || x.t.name.includes(q) || (x.t.title || '').includes(q)))
+    .filter(x => PFL === 'all' || (PFL === 'none' ? !x.r.done : PFL === 'low' ? x.r.done && x.r.pct < 50 : PFL === 'mid' ? x.r.pct >= 50 && x.r.pct < 80 : x.r.pct >= 80))
+    .sort((a, b) => a.r.pct - b.r.pct || (a.c.a + a.c.w) - (b.c.a + b.c.w));
+}
+const pfColor = p => p >= 80 ? '#2c7a64' : p >= 50 ? '#b26a00' : '#a63d36';
 function renderPf(){
   if (!PFS) return;
-  const all = S.staff.map((t, i) => ({ t, i, p:PFS[t.id], c:pfCount(PFS[t.id]) }));
-  const active = all.filter(x => x.c.a + x.c.w > 0).length, totA = all.reduce((s, x) => s + x.c.a, 0), totW = all.reduce((s, x) => s + x.c.w, 0);
-  $('pfStats').innerHTML = `<div class="stat"><b>${active}</b><span>ملف مُفعّل</span></div><div class="stat"><b>${totA}</b><span>إنجاز</span></div><div class="stat"><b>${totW}</b><span>شاهد</span></div>`;
+  const all = S.staff.map(t => ({ t, r: pfReadiness(PFS[t.id], t.title, t.model), c: pfCount(PFS[t.id]) }));
+  const avg = all.length ? Math.round(all.reduce((s, x) => s + x.r.pct, 0) / all.length) : 0;
+  const hi = all.filter(x => x.r.pct >= 80).length, none = all.filter(x => !x.r.done).length, totW = all.reduce((s, x) => s + x.c.w, 0);
+  $('pfStats').innerHTML = `<div class="stat"><b style="color:${pfColor(avg)}">${avg}%</b><span>متوسط الجاهزية</span></div><div class="stat"><b>${hi}</b><span>جاهز (80٪+)</span></div><div class="stat"><b>${none}</b><span>لم يبدأ</span></div><div class="stat"><b>${totW}</b><span>شاهد</span></div>`;
   const titles = [...new Set(S.staff.map(t => t.title || 'بدون مسمى'))];
-  $('pfChips').innerHTML = ['all', ...titles].map(v => `<button data-v="${Circ.esc(v)}" class="${PFF === v ? 'on' : ''}">${v === 'all' ? 'الكل' : Circ.esc(v)}</button>`).join('');
+  $('pfChips').innerHTML = ['all', ...titles].map(v => `<button data-v="${Circ.esc(v)}" class="${PFF === v ? 'on' : ''}">${v === 'all' ? 'كل المسميات' : Circ.esc(v)}</button>`).join('');
   $('pfChips').querySelectorAll('button').forEach(b => b.onclick = () => { PFF = b.dataset.v; renderPf(); });
-  const q = $('pfQ').value.trim();
-  const rows = all.filter(x => (PFF === 'all' || (x.t.title || 'بدون مسمى') === PFF) && (!q || x.t.name.includes(q) || (x.t.title || '').includes(q)))
-    .sort((a, b) => (b.c.a + b.c.w) - (a.c.a + a.c.w));
-  $('pfRows').innerHTML = rows.map(({ t, c, p }) => `<div class="row-t">
-      <div class="n">${Circ.esc(t.name)}<small>${Circ.esc(t.title || 'بدون مسمى')}${p && p.updatedAt ? ' · آخر تحديث ' + Circ.hijri(new Date(p.updatedAt)) : ''}</small></div>
+  $('pfLv').innerHTML = Object.entries(PF_LV).map(([k, l]) => `<button data-l="${k}" class="${PFL === k ? 'on' : ''}">${l}</button>`).join('');
+  $('pfLv').querySelectorAll('button').forEach(b => b.onclick = () => { PFL = b.dataset.l; renderPf(); });
+  const rows = pfRows();
+  $('pfRows').innerHTML = rows.map(({ t, c, p, r }) => `<div class="row-t" style="flex-wrap:wrap">
+      <div class="n" style="min-width:180px">${Circ.esc(t.name)}<small>${Circ.esc(t.title || 'بدون مسمى')} · ${Circ.esc(r.model.name)}${p && p.updatedAt ? ' · آخر تحديث ' + Circ.hijri(new Date(p.updatedAt)) : ''}</small></div>
+      <div style="flex:1;min-width:150px"><div style="display:flex;justify-content:space-between;font-size:.8rem;font-weight:800;color:${pfColor(r.pct)}"><span>${r.pct}%</span><span class="muted" style="font-weight:600">${r.done}/${r.n} بند</span></div>
+        <div class="prog" style="margin:4px 0"><i style="width:${r.pct}%;background:${pfColor(r.pct)}"></i></div>
+        ${r.missing.length && r.done ? `<details style="font-size:.78rem;color:#6b7680"><summary style="cursor:pointer">الناقص (${r.missing.length})</summary>${r.missing.map(m => '• ' + Circ.esc(m)).join('<br>')}</details>` : ''}</div>
       <div class="acts"><span class="badge ${c.a + c.w ? 'ok' : 'wait'}">🏆 ${c.a} · 📋 ${c.w}</span><a class="btn ghost sm" target="_blank" href="portfolio.html?id=${t.id}">عرض الملف</a></div></div>`).join('') || '<p class="muted">لا يوجد</p>';
+}
+function pfRemind(){
+  const box = $('pfRem'); if (box.innerHTML){ box.innerHTML = ''; return; }
+  const late = pfRows().filter(x => x.r.pct < 80);
+  if (!late.length){ toast('لا يوجد متأخرون في القائمة الحالية'); return; }
+  box.innerHTML = `<div class="card" style="background:#f6fbf9;margin-top:10px"><h2 style="font-size:1rem"><span class="dot"></span>تذكير ${late.length} منسوباً (جاهزيتهم أقل من 80٪)</h2><p class="muted" style="font-size:.8rem;margin-bottom:8px">اضغط «إرسال» بجانب كل اسم ليفتح الواتساب برسالة جاهزة فيها نسبته وبنوده الناقصة.</p>
+    ${late.map(({ t, r }) => { const msg = `السلام عليكم أ. ${t.name}\nنسبة جاهزية ملف إنجازك في بوابة متوسطة مكة المكرمة: ${r.pct}%\n${r.missing.length ? 'البنود الناقصة:\n' + r.missing.slice(0, 6).map(m => '• ' + m).join('\n') + (r.missing.length > 6 ? '\n• ...' : '') + '\n' : ''}\nأكمل ملفك من هنا:\n${Circ.pageURL('portfolio.html', {})}`;
+      return `<div class="row-t"><div class="n">${Circ.esc(t.name)}<small>${r.pct}% · ${r.done}/${r.n} بند</small></div><div class="acts">${t.phone ? `<a class="btn g sm" target="_blank" href="${Circ.wa(t.phone, msg)}" onclick="this.textContent='✓ أُرسل';this.classList.remove('g')">📲 إرسال</a>` : '<span class="muted">لا يوجد جوال</span>'}</div></div>`; }).join('')}</div>`;
+}
+function pfPrint(){
+  const rows = pfRows().slice().sort((a, b) => b.r.pct - a.r.pct);
+  const w = window.open('', '_blank');
+  w.document.write(`<!doctype html><html dir="rtl" lang="ar"><meta charset="utf-8"><title>تقرير جاهزية ملفات الإنجاز</title><style>body{font-family:Tajawal,Arial,sans-serif;margin:12mm;color:#1d2b3a}h1{font-size:17pt;margin:0 0 2mm;color:#123247}p{margin:0 0 5mm;color:#667}table{width:100%;border-collapse:collapse;font-size:10.5pt}th{background:#123247;color:#fff;padding:2mm;text-align:right}td{border-bottom:1px solid #dde7ea;padding:2mm;vertical-align:top}.b{height:3mm;background:#e6eeec;border-radius:2mm;overflow:hidden;width:30mm}.b i{display:block;height:100%}@page{size:A4;margin:10mm}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}</style>
+    <h1>تقرير جاهزية ملفات الإنجاز — ${Circ.esc(S.settings.school || 'متوسطة مكة المكرمة')}</h1><p>تاريخ التقرير: ${Circ.hijri(new Date())} — عدد المنسوبين: ${rows.length}</p>
+    <table><tr><th>م</th><th>الاسم</th><th>المسمى</th><th>الجاهزية</th><th>البنود</th><th>البنود الناقصة</th></tr>
+    ${rows.map((x, i) => `<tr><td>${i + 1}</td><td>${Circ.esc(x.t.name)}</td><td>${Circ.esc(x.t.title || '—')}</td><td><b style="color:${pfColor(x.r.pct)}">${x.r.pct}%</b><div class="b"><i style="width:${x.r.pct}%;background:${pfColor(x.r.pct)}"></i></div></td><td>${x.r.done}/${x.r.n}</td><td style="font-size:9pt;color:#666">${x.r.done ? x.r.missing.map(Circ.esc).join('، ') : 'لم يبدأ'}</td></tr>`).join('')}</table>
+    <p style="margin-top:8mm">مدير المدرسة: ${Circ.esc(S.settings.principalName || '')}</p><script>setTimeout(()=>print(),400)<\/script>`);
+  w.document.close();
 }
 
 /* ---------- الإعدادات ---------- */

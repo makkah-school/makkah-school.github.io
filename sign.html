@@ -521,7 +521,14 @@ function fail(m){ $('loading').classList.add('hide'); $('err').classList.remove(
 
 (async function init(){
   try {
-    if (!CID || !KEY) return fail();
+    if (!CID) return fail();
+    if (!KEY){   // الرابط العام (قروب المعلمين): الدخول بحساب المعلم
+      const s = Circ.session('teacher');
+      if (!s){ location.replace('teacher.html?next=' + encodeURIComponent('sign.html?c=' + CID + (VIEW ? '&v=1' : ''))); return; }
+      const st = (await Circ.staff()).find(t => t.id === s.id);
+      ME = st ? { id: st.id, name: st.name } : null;
+      [META, SET] = await Promise.all([Circ.getJSON(`c/${CID}/meta.json`), Circ.settings()]);
+    } else
     [ME, META, SET] = await Promise.all([Circ.getJSON(`keys/${KEY}.json`), Circ.getJSON(`c/${CID}/meta.json`), Circ.settings()]);
     if (!ME || !META) return fail();
     if (META.deleted) return fail('تم إلغاء هذا التعميم من قِبل إدارة المدرسة.');
