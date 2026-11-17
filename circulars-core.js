@@ -33,7 +33,7 @@ const Circ = (() => {
 
   async function getJSON(path){
     if (DEMO){ const v = lsGet(P(path)); return v ? JSON.parse(v) : null; }
-    const r = await fetch(`${C.SUPABASE_URL}/storage/v1/object/${C.BUCKET}/${P(path)}?t=${Date.now()}`, { headers: { ...H(), 'cache-control':'no-cache' } });
+    const r = await fetch(`${C.SUPABASE_URL}/storage/v1/object/public/${C.BUCKET}/${P(path)}?t=${Date.now()}`, { cache:'no-store' });
     if (r.status === 400 || r.status === 404) return null;
     if (!r.ok) throw new Error('تعذّر قراءة البيانات (' + r.status + ')');
     return r.json();
@@ -41,7 +41,7 @@ const Circ = (() => {
   async function putJSON(path, obj){
     if (DEMO){ lsSet(P(path), JSON.stringify(obj)); return; }
     const r = await fetch(`${C.SUPABASE_URL}/storage/v1/object/${C.BUCKET}/${P(path)}`, {
-      method:'POST', headers:{ ...H(), 'Content-Type':'application/json', 'x-upsert':'true' }, body: JSON.stringify(obj) });
+      method:'POST', headers:{ ...H(), 'Content-Type':'application/json', 'x-upsert':'true', 'cache-control':'max-age=0' }, body: JSON.stringify(obj) });
     if (!r.ok) throw new Error('تعذّر الحفظ (' + r.status + ')');
   }
   async function putFile(path, file){
@@ -50,12 +50,12 @@ const Circ = (() => {
       lsSet(P(path), data); return;
     }
     const r = await fetch(`${C.SUPABASE_URL}/storage/v1/object/${C.BUCKET}/${P(path)}`, {
-      method:'POST', headers:{ ...H(), 'Content-Type': file.type || 'application/octet-stream', 'x-upsert':'true' }, body: file });
+      method:'POST', headers:{ ...H(), 'Content-Type': file.type || 'application/octet-stream', 'x-upsert':'true', 'cache-control':'max-age=0' }, body: file });
     if (!r.ok) throw new Error('تعذّر رفع الملف (' + r.status + ')');
   }
   async function getFileBlob(path){
     if (DEMO){ const d = lsGet(P(path)); if (!d) return null; return (await fetch(d)).blob(); }
-    const r = await fetch(`${C.SUPABASE_URL}/storage/v1/object/${C.BUCKET}/${P(path)}`, { headers: H() });
+    const r = await fetch(`${C.SUPABASE_URL}/storage/v1/object/public/${C.BUCKET}/${P(path)}?t=${Date.now()}`, { cache:'no-store' });
     if (!r.ok) return null;
     return r.blob();
   }
@@ -95,6 +95,7 @@ const Circ = (() => {
   }
   async function staff(){
     let s = await getJSON('staff.json');
+    if (s && !Array.isArray(s)) throw new Error('ملف المنسوبين تالف');
     if (!s){
       s = CIRC_DEFAULT_STAFF.map((name) => ({ id: uid(6), name, phone: '', token: uid(12) }));
       await saveStaff(s);
@@ -106,7 +107,16 @@ const Circ = (() => {
     await Promise.all(list.map(t => putJSON(`keys/${t.token}.json`, { id: t.id, name: t.name })));
   }
   const circulars = async () => (await getJSON('index.json')) || [];
-  const signatures = async cid => (await list(`c/${cid}/sig/`)).map(n => n.replace(/\.json$/, ''));
+  // التواقيع: يُفحص ملف كل منسوب مباشرة (لا يعتمد على صلاحية عرض المجلدات)
+  async function signatures(cid, staffList){
+    const ids = (staffList || await staff()).map(t => t.id);
+    const out = [];
+    for (let i = 0; i < ids.length; i += 12){
+      const part = await Promise.all(ids.slice(i, i + 12).map(id => getJSON(`c/${cid}/sig/${id}.json`).catch(() => null)));
+      part.forEach(r => r && out.push(r));
+    }
+    return out;
+  }
 
   return { DEMO, C, getJSON, putJSON, putFile, getFileBlob, list, uid, sha, hijri, timeStr, esc, phone, wa, pageURL, settings, staff, saveStaff, circulars, signatures };
 })();

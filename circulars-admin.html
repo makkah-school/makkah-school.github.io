@@ -163,8 +163,10 @@ async function login(){
 $('pin').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
 async function start(){
   $('vLogin').classList.add('hide'); $('vApp').classList.remove('hide');
-  S.settings = await Circ.settings();
-  S.staff = await Circ.staff();
+  try {
+    S.settings = await Circ.settings();
+    S.staff = await Circ.staff();
+  } catch(e){ alert('تعذّر الاتصال بقاعدة البيانات: ' + e.message); return; }
   $('cDate').value = Circ.hijri();
   fillSettings(); renderStaff(); loadNews(); await loadCircs();
   const c = new URLSearchParams(location.search).get('c'); if (c) openView(c);
@@ -183,7 +185,7 @@ async function loadCircs(){
   S.circs = (await Circ.circulars()).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   if (!S.circs.length){ $('circs').innerHTML = '<p class="muted">لا توجد تعاميم بعد.</p>'; return; }
   $('circs').innerHTML = '<p class="muted">جارٍ التحميل...</p>';
-  const counts = await Promise.all(S.circs.map(c => Circ.signatures(c.id).then(s => s.length)));
+  const counts = await Promise.all(S.circs.map((c, i) => i < 6 ? Circ.signatures(c.id, S.staff).then(s => s.length) : Promise.resolve(c.signedCount ?? 0)));
   const total = S.staff.length;
   $('circs').innerHTML = S.circs.map((c, i) => `
     <div class="circ-item" onclick="openView('${c.id}')">
@@ -224,9 +226,8 @@ async function openView(id){
 }
 function backToList(){ $('circView').classList.add('hide'); $('circList').classList.remove('hide'); history.replaceState(null, '', location.pathname); loadCircs(); }
 async function refresh(){
-  const ids = await Circ.signatures(S.cur.id);
-  const sigs = await Promise.all(ids.map(sid => Circ.getJSON(`c/${S.cur.id}/sig/${sid}.json`)));
-  S.sigs = {}; sigs.filter(Boolean).forEach(s => S.sigs[s.staffId] = s);
+  const sigs = await Circ.signatures(S.cur.id, S.staff);
+  S.sigs = {}; sigs.forEach(s => S.sigs[s.staffId] = s);
   S.sent = (await Circ.getJSON(`c/${S.cur.id}/sent.json`)) || {};
   const n = S.staff.length, k = S.staff.filter(t => S.sigs[t.id]).length;
   $('sSigned').textContent = k; $('sPending').textContent = n - k;
