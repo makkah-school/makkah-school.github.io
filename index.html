@@ -232,7 +232,7 @@ footer .copy{width:100%;border-top:1px solid rgba(255,255,255,.08);padding-top:1
       </a>
       <a class="tile wide rv" href="teacher.html" style="background:linear-gradient(150deg,#e9f6f1,#fff)">
         <div><div class="ic" style="background:#d4efe4">👨‍🏫</div><h3>بوابة المعلم</h3>
-        <p>دخول باسم مستخدم وكلمة مرور خاصة بكل معلم: تعاميمك المطلوب توقيعها، إقراراتك، وخدماتك في مكان واحد.</p></div>
+        <p>دخول باسم مستخدم وكلمة مرور خاصة بكل معلم: تعاميمك المطلوب توقيعها، <b>ملف إنجازك</b> وشواهدك، وخدماتك في مكان واحد.</p></div>
         <span class="go">تسجيل الدخول</span>
       </a>
       <a class="tile wide gold rv" href="reports.html">
@@ -452,7 +452,12 @@ const Circ = (() => {
     return out;
   }
 
-  return { DEMO, C, pwHash, makePw, checkPw, randPw, findStaff, session, setSession, logout, ensureUsers, getJSON, putJSON, putFile, getFileBlob, list, uid, sha, hijri, timeStr, esc, phone, wa, pageURL, settings, staff, saveStaff, circulars, signatures };
+  // رابط عام لملف مرفوع (للعرض في الصفحة)
+  function fileURL(path){
+    if (DEMO) return lsGet(P(path)) || '';
+    return `${C.SUPABASE_URL}/storage/v1/object/public/${C.BUCKET}/${P(path)}`;
+  }
+  return { DEMO, C, fileURL, pwHash, makePw, checkPw, randPw, findStaff, session, setSession, logout, ensureUsers, getJSON, putJSON, putFile, getFileBlob, list, uid, sha, hijri, timeStr, esc, phone, wa, pageURL, settings, staff, saveStaff, circulars, signatures };
 })();
 
 /* ---------- عرض ملف PDF (يعتمد pdf.js إن توفر) ---------- */

@@ -138,6 +138,7 @@ textarea{min-height:120px;resize:vertical}
       <button data-t="tCirc" class="on">📄 التعاميم</button>
       <button data-t="tNews">📢 الإعلانات</button>
       <button data-t="tStaff">👥 المنسوبون</button>
+      <button data-t="tPf">🏆 ملفات الإنجاز</button>
       <button data-t="tSet">⚙️ الإعدادات</button>
       <button onclick="adminLogout()" style="flex:0 0 auto;min-width:0;color:var(--red)">🚪 خروج</button>
     </div>
@@ -235,6 +236,17 @@ textarea{min-height:120px;resize:vertical}
       </div>
     </div>
 
+    <!-- ملفات الإنجاز -->
+    <div id="tPf" class="hide">
+      <div class="card">
+        <h2><span class="dot"></span>ملفات إنجاز المنسوبين</h2>
+        <div class="stats" id="pfStats"></div>
+        <input id="pfQ" type="text" placeholder="🔍 بحث بالاسم أو المسمى" oninput="renderPf()">
+        <div class="chips" id="pfChips" style="margin-top:10px"></div>
+        <div id="pfRows" style="margin-top:6px"><p class="muted">⏳ جارٍ التحميل...</p></div>
+      </div>
+    </div>
+
     <!-- الإعدادات -->
     <div id="tSet" class="hide">
       <div class="card">
@@ -275,6 +287,7 @@ textarea{min-height:120px;resize:vertical}
 </div></div>
 <style>.mdl{position:fixed;inset:0;background:rgba(15,42,61,.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:60}.mdl.on{display:flex}.mdl .card{width:100%;max-width:460px;margin:0;max-height:92vh;overflow:auto}
 .st-pw{font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:12px}.st-pw.ok{background:#e3f4ec;color:#2c7a5c}.st-pw.no{background:#fdecea;color:#a63d36}</style>
+<datalist id="jobsDl"><option value="معلم"><option value="معلم أول"><option value="معلم ممارس"><option value="معلم متقدم"><option value="معلم خبير"><option value="وكيل الشؤون التعليمية"><option value="وكيل شؤون الطلاب"><option value="وكيل الشؤون المدرسية"><option value="موجه طلابي"><option value="رائد نشاط"><option value="موجه صحي"><option value="أمين مصادر التعلم"><option value="محضر مختبر"><option value="إداري"><option value="مساعد إداري"><option value="سكرتير"><option value="معلم تربية خاصة"><option value="مدير المدرسة"></datalist>
 <div class="toast" id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -431,7 +444,12 @@ const Circ = (() => {
     return out;
   }
 
-  return { DEMO, C, pwHash, makePw, checkPw, randPw, findStaff, session, setSession, logout, ensureUsers, getJSON, putJSON, putFile, getFileBlob, list, uid, sha, hijri, timeStr, esc, phone, wa, pageURL, settings, staff, saveStaff, circulars, signatures };
+  // رابط عام لملف مرفوع (للعرض في الصفحة)
+  function fileURL(path){
+    if (DEMO) return lsGet(P(path)) || '';
+    return `${C.SUPABASE_URL}/storage/v1/object/public/${C.BUCKET}/${P(path)}`;
+  }
+  return { DEMO, C, fileURL, pwHash, makePw, checkPw, randPw, findStaff, session, setSession, logout, ensureUsers, getJSON, putJSON, putFile, getFileBlob, list, uid, sha, hijri, timeStr, esc, phone, wa, pageURL, settings, staff, saveStaff, circulars, signatures };
 })();
 
 /* ---------- عرض ملف PDF (يعتمد pdf.js إن توفر) ---------- */
@@ -497,7 +515,7 @@ function adminLogout(){ sessionStorage.removeItem('circ_ok'); Circ.logout('admin
 /* ---------- التبويبات ---------- */
 document.querySelectorAll('.tabs button[data-t]').forEach(b => b.onclick = () => {
   document.querySelectorAll('.tabs button[data-t]').forEach(x => x.classList.toggle('on', x === b));
-  ['tCirc','tNews','tStaff','tSet'].forEach(id => $(id).classList.toggle('hide', id !== b.dataset.t));
+  ['tCirc','tNews','tStaff','tPf','tSet'].forEach(id => $(id).classList.toggle('hide', id !== b.dataset.t));
 });
 
 /* ---------- التعاميم ---------- */
@@ -672,9 +690,11 @@ function renderStaff(){
   $('staffRows').innerHTML = S.staff.map((t, i) => `
     <div class="row-t"><span class="num">${i + 1}</span>
       <div class="n"><input type="text" value="${Circ.esc(t.name)}" data-i="${i}" data-k="name"></div>
-      <div style="width:150px"><input type="tel" value="${Circ.esc(t.phone)}" placeholder="05xxxxxxxx" data-i="${i}" data-k="phone"></div>
+      <div style="width:150px"><input type="text" list="jobsDl" value="${Circ.esc(t.title || '')}" placeholder="المسمى الوظيفي" data-i="${i}" data-k="title"></div>
+      <div style="width:140px"><input type="tel" value="${Circ.esc(t.phone)}" placeholder="05xxxxxxxx" data-i="${i}" data-k="phone"></div>
       <div class="acts" style="align-items:center"><span class="muted" title="اسم المستخدم">👤 ${Circ.esc(t.user || '—')}</span>
         <span class="st-pw ${t.pw ? 'ok' : 'no'}">${t.pw ? (t.pw.byUser ? 'غيّرها المعلم' : 'مُصدرة') : 'بلا كلمة مرور'}</span>
+        <a class="btn ghost sm" target="_blank" href="portfolio.html?id=${t.id}" title="ملف الإنجاز">🏆</a>
         <button class="btn sm" onclick="issuePw(${i})">🔑 ${t.pw ? 'إعادة تعيين' : 'إصدار'}</button>
         <button class="btn red sm" onclick="delStaff(${i})">✕</button></div></div>`).join('');
   $('staffRows').querySelectorAll('input').forEach(inp => inp.oninput = () => { S.staff[inp.dataset.i][inp.dataset.k] = inp.value.trim(); });
@@ -710,7 +730,7 @@ async function saveStaffUI(btn){
   S.staff = S.staff.filter(t => t.name);
   await busy(btn, async () => {
     const saved = await Circ.staff(); const byId = Object.fromEntries(saved.map(x => [x.id, x]));
-    S.staff.forEach(t => { const sv = byId[t.id]; if (sv && sv.pw && (!t.pw || sv.pw.at > t.pw.at)) t.pw = sv.pw; });
+    S.staff.forEach(t => { const sv = byId[t.id]; if (sv && sv.pw && (!t.pw || sv.pw.at > t.pw.at)) t.pw = sv.pw; if (sv && sv.title && !t.title) t.title = sv.title; });
     Circ.ensureUsers(S.staff); await Circ.saveStaff(S.staff); renderStaff(); toast('تم حفظ قائمة المنسوبين ✅'); });
 }
 const norm = s => s.replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/\s+/g, '').replace(/^عبد/, 'عبد');
@@ -761,6 +781,36 @@ function editNews(id){
 function cancelNewsEdit(){ EDIT_NEWS = null; $('nTitle').value = ''; $('nBody').value = ''; $('nPin').checked = false; $('nDate').value = isoToday(); $('nSave').textContent = 'نشر في البوابة'; $('nCancel').classList.add('hide'); }
 async function delNews(id){ if (!confirm('حذف هذا المنشور؟')) return; const cur = ((await Circ.getJSON('news.json')) || []).filter(x => x.id !== id); await Circ.putJSON('news.json', cur); loadNews(); }
 async function pinNews(id){ const cur = (await Circ.getJSON('news.json')) || []; cur.forEach(x => { if (x.id === id) x.pin = x.pin ? 0 : 1; }); await Circ.putJSON('news.json', cur); loadNews(); }
+
+/* ---------- ملفات الإنجاز ---------- */
+let PFS = null, PFF = 'all';
+document.querySelector('[data-t=tPf]').addEventListener('click', loadPf);
+async function loadPf(){
+  $('pfRows').innerHTML = '<p class="muted">⏳ جارٍ التحميل...</p>';
+  const out = {};
+  for (let i = 0; i < S.staff.length; i += 12){
+    const part = S.staff.slice(i, i + 12);
+    const r = await Promise.all(part.map(t => Circ.getJSON(`pf/${t.id}.json`).catch(() => null)));
+    part.forEach((t, j) => out[t.id] = r[j]);
+  }
+  PFS = out; renderPf();
+}
+function pfCount(p){ const c = { a:0, w:0 }; (p && p.items || []).forEach(x => /^(school_work|photo_witness|student_product|lesson|wit_other)$/.test(x.type) ? c.w++ : c.a++); return c; }
+function renderPf(){
+  if (!PFS) return;
+  const all = S.staff.map((t, i) => ({ t, i, p:PFS[t.id], c:pfCount(PFS[t.id]) }));
+  const active = all.filter(x => x.c.a + x.c.w > 0).length, totA = all.reduce((s, x) => s + x.c.a, 0), totW = all.reduce((s, x) => s + x.c.w, 0);
+  $('pfStats').innerHTML = `<div class="stat"><b>${active}</b><span>ملف مُفعّل</span></div><div class="stat"><b>${totA}</b><span>إنجاز</span></div><div class="stat"><b>${totW}</b><span>شاهد</span></div>`;
+  const titles = [...new Set(S.staff.map(t => t.title || 'بدون مسمى'))];
+  $('pfChips').innerHTML = ['all', ...titles].map(v => `<button data-v="${Circ.esc(v)}" class="${PFF === v ? 'on' : ''}">${v === 'all' ? 'الكل' : Circ.esc(v)}</button>`).join('');
+  $('pfChips').querySelectorAll('button').forEach(b => b.onclick = () => { PFF = b.dataset.v; renderPf(); });
+  const q = $('pfQ').value.trim();
+  const rows = all.filter(x => (PFF === 'all' || (x.t.title || 'بدون مسمى') === PFF) && (!q || x.t.name.includes(q) || (x.t.title || '').includes(q)))
+    .sort((a, b) => (b.c.a + b.c.w) - (a.c.a + a.c.w));
+  $('pfRows').innerHTML = rows.map(({ t, c, p }) => `<div class="row-t">
+      <div class="n">${Circ.esc(t.name)}<small>${Circ.esc(t.title || 'بدون مسمى')}${p && p.updatedAt ? ' · آخر تحديث ' + Circ.hijri(new Date(p.updatedAt)) : ''}</small></div>
+      <div class="acts"><span class="badge ${c.a + c.w ? 'ok' : 'wait'}">🏆 ${c.a} · 📋 ${c.w}</span><a class="btn ghost sm" target="_blank" href="portfolio.html?id=${t.id}">عرض الملف</a></div></div>`).join('') || '<p class="muted">لا يوجد</p>';
+}
 
 /* ---------- الإعدادات ---------- */
 function fillSettings(){ $('sSchool').value = S.settings.school; $('sPName').value = S.settings.principalName; $('sPPhone').value = S.settings.principalPhone || ''; }

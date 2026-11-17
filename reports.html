@@ -328,7 +328,12 @@ const Circ = (() => {
     return out;
   }
 
-  return { DEMO, C, pwHash, makePw, checkPw, randPw, findStaff, session, setSession, logout, ensureUsers, getJSON, putJSON, putFile, getFileBlob, list, uid, sha, hijri, timeStr, esc, phone, wa, pageURL, settings, staff, saveStaff, circulars, signatures };
+  // رابط عام لملف مرفوع (للعرض في الصفحة)
+  function fileURL(path){
+    if (DEMO) return lsGet(P(path)) || '';
+    return `${C.SUPABASE_URL}/storage/v1/object/public/${C.BUCKET}/${P(path)}`;
+  }
+  return { DEMO, C, fileURL, pwHash, makePw, checkPw, randPw, findStaff, session, setSession, logout, ensureUsers, getJSON, putJSON, putFile, getFileBlob, list, uid, sha, hijri, timeStr, esc, phone, wa, pageURL, settings, staff, saveStaff, circulars, signatures };
 })();
 
 /* ---------- عرض ملف PDF (يعتمد pdf.js إن توفر) ---------- */
